@@ -1,0 +1,13 @@
+name: Cars
+slug: cars
+schema:
+  properties:
+    name:
+      type: string
+      required: true
+    color:
+      type: string
+      required: true
+    year: 
+      type: number
+      required: true
