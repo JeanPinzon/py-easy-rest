@@ -5,25 +5,24 @@ from sanic import response
 
 from apify.repos.mongo import MongoRepo
 from apify.repos import DatabaseError
-from apify import settings
 
 
 def read_api_params_from_yaml():
     api = None
 
-    with open(r'./api.yaml') as file:
+    with open(r"./api.yaml") as file:
         api = yaml.load(file, Loader=yaml.FullLoader)
 
     return api
 
 
 api = read_api_params_from_yaml()
-app = Sanic(api['slug'])
+app = Sanic(api["slug"])
 repo = MongoRepo()
 
 
 def get_query_string_arg(query_string, arg_name):
-    args = query_string.get('page', [])
+    args = query_string.get("page", [])
     
     if len(args) == 1:
         return args[0]
@@ -38,120 +37,102 @@ def validate(resource):
     return None
 
 
-async def _post(request, id=None):
-    try:
-        errors = validate(request.json)
+async def post(request, id=None):      
+    errors = validate(request.json)
 
-        if errors:
-            return response.json({'errors': errors}, status=400)
+    if errors:
+        return response.json({"errors": errors}, status=400)
 
-        resource_id = await repo.create(request.json, id)
-        
-        return response.json({'id': resource_id}, status=201)
-    except DatabaseError as db_error:
-        return response.json({'message': db_error.user_message}, status=500)
-    except Exception as error:
-        return response.json({}, status=500)
+    resource_id = await repo.create(request.json, id)
+    
+    return response.json({"id": resource_id}, status=201)
 
 
-@app.route(f'/{api["slug"]}/schema', methods=['GET'])
-async def get(request):
-    return response.json(api['schema'])
-
-
-@app.route(f'/{api["slug"]}', methods=['GET'])
-async def get(request):
-    try:
-        page = get_query_string_arg(request.args, 'page')
-        size = get_query_string_arg(request.args, 'size')
-
-        result = await repo.list(page, size)
-
-        return response.json(result)
-    except DatabaseError as db_error:
-        return response.json({'message': db_error.user_message}, status=500)
-    except Exception as error:
-        return response.json({}, status=500)
-
-
-@app.route(f'/{api["slug"]}/<id>', methods=['GET'])
 async def list(request, id):
-    try:
-        result = await repo.get(id)
-        
-        if result:
-            return response.json(result)
+    result = await repo.get(id)
+    
+    if result:
+        return response.json(result)
 
-        return response.json({}, status=404)
-    except DatabaseError as db_error:
-        return response.json({'message': db_error.user_message}, status=500)
-    except Exception as error:
-        return response.json({}, status=500)
+    return response.json({}, status=404)
 
 
-@app.route(f'/{api["slug"]}', methods=['POST'])
-async def post(request):
-    return await _post(request)
+async def get(request):
+    page = get_query_string_arg(request.args, "page")
+    size = get_query_string_arg(request.args, "size")
 
-@app.route(f'/{api["slug"]}/<id>', methods=['POST'])
-async def post_with_id(request, id):
-    return await _post(request, id)
+    result = await repo.list(page, size)
+
+    return response.json(result)
 
 
-@app.route(f'/{api["slug"]}/<id>', methods=['PUT'])
 async def put(request, id):
-    try:
-        errors = validate(request.json)
+    errors = validate(request.json)
 
-        if errors:
-            return response.json({'errors': errors}, status=400)
+    if errors:
+        return response.json({"errors": errors}, status=400)
 
-        resource_id = await repo.replace(id, request.json)
+    resource_id = await repo.replace(id, request.json)
 
-        if resource_id:
-            return response.json({'id': resource_id})
+    if resource_id:
+        return response.json({"id": resource_id})
 
-        return response.json({}, status=404)
-    except DatabaseError as db_error:
-        return response.json({'message': db_error.user_message}, status=500)
-    except Exception as error:
-        return response.json({}, status=500)
+    return response.json({}, status=404)
 
 
-@app.route(f'/{api["slug"]}/<id>', methods=['PATCH'])
 async def patch(request, id):
-    try:
-        errors = validate(request.json)
+    errors = validate(request.json)
 
-        if errors:
-            return response.json({'errors': errors}, status=400)
+    if errors:
+        return response.json({"errors": errors}, status=400)
 
-        resource_id = await repo.update(id, request.json)
+    resource_id = await repo.update(id, request.json)
 
-        if resource_id:
-            return response.json({'id': resource_id})
+    if resource_id:
+        return response.json({"id": resource_id})
 
-        return response.json({}, status=404)
-    except DatabaseError as db_error:
-        return response.json({'message': db_error.user_message}, status=500)
-    except Exception as error:
-        return response.json({}, status=500)
+    return response.json({}, status=404)
 
 
-@app.route(f'/{api["slug"]}/<id>', methods=['DELETE'])
 async def delete(request, id):
+    await repo.delete(id)
+    return response.json()
+
+
+handlers_without_id = {
+    "GET": get,
+    "POST": post,
+}
+
+handlers_with_id = {
+    "GET": list,
+    "POST": post,
+    "PATCH": patch,
+    "PUT": put,
+    "DELETE": delete,
+}
+
+
+async def handle_request(handlers, request, *args):
     try:
-        await repo.delete(id)
-        return response.json()
+        return await handlers[request.method](request, args)
     except DatabaseError as db_error:
-        return response.json({'message': db_error.user_message}, status=500)
+        return response.json({"message": db_error.user_message}, status=500)
     except Exception as error:
         return response.json({}, status=500)
 
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0', 
-        port=8000, 
-        debug=settings.DEBUG, 
-        auto_reload=settings.AUTO_RELOAD
-    )
+
+@app.route(f"/{api['slug']}", methods=["GET", "POST"])
+async def handler_without_id(request):
+    return await handle_request(handlers_without_id, request)
+
+
+@app.route(f"/{api['slug']}/<id>", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def handler_with_id(request, id):
+    return await handle_request(handlers_with_id, request, id)
+
+
+@app.route(f"/{api['slug']}/schema", methods=["GET"])
+async def get_schema(request):
+    print(request.method)
+    return response.json(api["schema"])

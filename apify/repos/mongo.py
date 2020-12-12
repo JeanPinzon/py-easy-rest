@@ -1,4 +1,4 @@
-from repos import Repo
+from apify.repos import Repo
 
 class MongoRepo(Repo):
     
