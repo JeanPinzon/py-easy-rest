@@ -3,15 +3,21 @@ import yaml
 from sanic import Sanic
 from sanic import response
 
-from repos.mongo import MongoRepo
-from repos import DatabaseError
-
-api = None
-
-with open(r'./api.yaml') as file:
-    api = yaml.load(file, Loader=yaml.FullLoader)
+from apify.repos.mongo import MongoRepo
+from apify.repos import DatabaseError
+from apify import settings
 
 
+def read_api_params_from_yaml():
+    api = None
+
+    with open(r'./api.yaml') as file:
+        api = yaml.load(file, Loader=yaml.FullLoader)
+
+    return api
+
+
+api = read_api_params_from_yaml()
 app = Sanic(api['slug'])
 repo = MongoRepo()
 
@@ -143,4 +149,9 @@ async def delete(request, id):
         return response.json({}, status=500)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True, auto_reload=True)
+    app.run(
+        host='0.0.0.0', 
+        port=8000, 
+        debug=settings.DEBUG, 
+        auto_reload=settings.AUTO_RELOAD
+    )
