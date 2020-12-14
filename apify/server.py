@@ -14,12 +14,12 @@ class App():
         self._api = App._read_api_params_from_yaml(api_config_path)
 
         self._handlers_without_id = {
-            "GET": self._get,
+            "GET": self._list,
             "POST": self._post,
         }
 
         self._handlers_with_id = {
-            "GET": self._list,
+            "GET": self._get,
             "POST": self._post,
             "PATCH": self._patch,
             "PUT": self._put,
@@ -79,7 +79,7 @@ class App():
 
         return response.json({"id": resource_id}, status=201)
 
-    async def _list(self, request, id):
+    async def _get(self, request, id):
         result = await self._repo.get(id)
 
         if result:
@@ -87,7 +87,7 @@ class App():
 
         return response.json({}, status=404)
 
-    async def _get(self, request):
+    async def _list(self, request):
         page = App._get_query_string_arg(request.args, "page")
         size = App._get_query_string_arg(request.args, "size")
 
@@ -125,19 +125,21 @@ class App():
         await self._repo.delete(id)
         return response.json()
 
-    async def _handle_request(self, handlers, request, *args):
+    async def handle_without_id(self, request):
         try:
-            return await handlers[request.method](request, args)
+            return await self._handlers_without_id[request.method](request)
         except DatabaseError as db_error:
             return response.json({"message": db_error.user_message}, status=500)
-        except Exception:
+        except Exception as e:
             return response.json({}, status=500)
 
-    async def handle_without_id(self, request):
-        return await self._handle_request(self._handlers_without_id, request)
-
     async def handle_with_id(self, request, id):
-        return await self._handle_request(self._handlers_with_id, request, id)
+        try:
+            return await self._handlers_with_id[request.method](request, id)
+        except DatabaseError as db_error:
+            return response.json({"message": db_error.user_message}, status=500)
+        except Exception as e:
+            return response.json({}, status=500)
 
     async def get_schema(self, request):
         return response.json(self._api["schema"])
