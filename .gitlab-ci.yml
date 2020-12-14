@@ -10,3 +10,8 @@ Unit Tests:
   stage: Tests
   script:
     - make test
+
+Code Lint:
+  stage: Tests
+  script:
+    - make lint

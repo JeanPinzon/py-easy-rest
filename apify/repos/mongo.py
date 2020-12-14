@@ -1,7 +1,8 @@
 from apify.repos import Repo
 
+
 class MongoRepo(Repo):
-    
+
     def __init__(self):
         pass
 

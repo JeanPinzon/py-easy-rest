@@ -2,6 +2,7 @@
 Module with repositories to be used connected with api.
 """
 
+
 class DatabaseError(Exception):
     """
     Error to raise in case of database errors.
@@ -18,7 +19,7 @@ class Repo():
     Interface to define contract to repositories.
     All methods raises an <DatabaseError> in case of error.
     """
-    
+
     async def get(self, id):
         """
         Receives <id> and return a dictionary with the result.
@@ -35,7 +36,7 @@ class Repo():
 
     async def create(self, data, id=None):
         """
-        Receives <data> with the resource to be saved, 
+        Receives <data> with the resource to be saved,
         save it into db, and return the resource id.
         If receive <id>, set this id to the document and return this id.
         """
@@ -43,14 +44,14 @@ class Repo():
 
     async def replace(self, id, data):
         """
-        Receives <data> with the resource to be saved and <id>, 
+        Receives <data> with the resource to be saved and <id>,
         replace the resource in db.
         """
         raise NotImplementedError
 
     async def update(self, id, data):
         """
-        Receives <data> with the partial resource to be saved and <id>, 
+        Receives <data> with the partial resource to be saved and <id>,
         replace just the partial resource received in db.
         """
         raise NotImplementedError
