@@ -1,0 +1,12 @@
+image: python:3.8
+
+before_script:
+  - make setup
+
+stages:
+  - Tests
+
+Unit Tests:
+  stage: Tests
+  script:
+    - make test
