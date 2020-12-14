@@ -1,0 +1,13 @@
+name: Mock
+slug: mock
+schema:
+  properties:
+    name:
+      type: string
+      required: true
+    color:
+      type: string
+      required: true
+    year: 
+      type: number
+      required: true

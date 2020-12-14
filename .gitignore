@@ -4,3 +4,11 @@
 *.py[cod]
 *$py.class
 .vscode
+
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+.pytest_cache/

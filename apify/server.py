@@ -8,9 +8,10 @@ from apify.repos import DatabaseError
 
 class App():
     
-    def __init__(self, repo):
+    def __init__(self, repo, api_config_path):
         self._repo = repo
-        self._api = App._read_api_params_from_yaml()
+        self._api_config_path = api_config_path
+        self._api = App._read_api_params_from_yaml(api_config_path)
 
         self._handlers_without_id = {
             "GET": self._get,
@@ -44,10 +45,10 @@ class App():
         )
 
     @staticmethod
-    def _read_api_params_from_yaml():
+    def _read_api_params_from_yaml(api_config_path):
         api = None
 
-        with open(r"./api.yaml") as file:
+        with open(api_config_path) as file:
             api = yaml.load(file, Loader=yaml.FullLoader)
 
         return api
