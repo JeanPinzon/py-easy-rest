@@ -1,5 +1,7 @@
 import pytest
 
+from apify.repos import DatabaseError
+
 from tests.apify import BaseTestCase
 
 
@@ -39,6 +41,8 @@ class TestServer(BaseTestCase):
 
         assert response.status == 200
         assert response.json() == expected_list_of_resources
+
+        self._mock_repo.list.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_should_get_without_id_pass_pagination_params_to_repo_when_receives_it_as_query_string(self):
@@ -157,3 +161,60 @@ class TestServer(BaseTestCase):
         assert response.json() == {}
 
         self._mock_repo.delete.assert_called_once_with(resource_id)
+
+    @pytest.mark.asyncio
+    async def test_should_request_returns_500_when_it_result_in_a_not_expected_error(self):
+        self._mock_repo.list.side_effect = Exception()
+
+        request, response = await self.request_api("/mock")
+
+        assert response.status == 500
+        assert response.json() == {}
+
+        self._mock_repo.list.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_should_request_with_id_returns_500_when_it_result_in_a_not_expected_error(self):
+        resource_id = 'mock-id'
+
+        self._mock_repo.get.side_effect = Exception()
+
+        request, response = await self.request_api(f"/mock/{resource_id}")
+
+        assert response.status == 500
+        assert response.json() == {}
+
+        self._mock_repo.get.assert_called_once_with(resource_id)
+
+    @pytest.mark.asyncio
+    async def test_should_request_returns_500_and_message_when_it_result_in_a_db_error(self):
+        expected_error_message = "User friendly error message"
+
+        self._mock_repo.list.side_effect = DatabaseError(
+            error_message="System error!",
+            user_message=expected_error_message
+        )
+
+        request, response = await self.request_api("/mock")
+
+        assert response.status == 500
+        assert response.json() == {"message": expected_error_message}
+
+        self._mock_repo.list.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_should_request_with_id_returns_500_and_message_when_it_result_in_a_db_error(self):
+        resource_id = 'mock-id'
+        expected_error_message = "User friendly error message"
+
+        self._mock_repo.get.side_effect = DatabaseError(
+            error_message="System error!",
+            user_message=expected_error_message
+        )
+
+        request, response = await self.request_api(f"/mock/{resource_id}")
+
+        assert response.status == 500
+        assert response.json() == {"message": expected_error_message}
+
+        self._mock_repo.get.assert_called_once_with(resource_id)
