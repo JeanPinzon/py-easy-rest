@@ -31,19 +31,10 @@ class BaseTestCase(AsyncTestCase):
         self._mock_repo = Mock(MockRepo)
         self._apify = App(self._mock_repo, "./tests/apify/api-mock.yaml")
 
-    async def get(self, path):
+    async def request_api(self, path, method="GET", json=None):
         client = self._apify.app.asgi_client
 
-        request, response = await client.get(path)
-
-        await client.aclose()
-
-        return request, response
-
-    async def post(self, path, json=None):
-        client = self._apify.app.asgi_client
-
-        request, response = await client.post(path, json=json)
+        request, response = await client.request(method, path, json=json)
 
         await client.aclose()
 

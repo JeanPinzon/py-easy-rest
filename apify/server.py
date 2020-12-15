@@ -120,12 +120,9 @@ class App():
         if errors:
             return response.json({"errors": errors}, status=400)
 
-        resource_id = await self._repo.update(id, request.json)
+        await self._repo.update(id, request.json)
 
-        if resource_id:
-            return response.json({"id": resource_id})
-
-        return response.json({}, status=404)
+        return response.json({})
 
     async def _delete(self, request, id):
         await self._repo.delete(id)

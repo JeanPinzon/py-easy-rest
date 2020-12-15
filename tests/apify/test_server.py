@@ -7,7 +7,7 @@ class TestServer(BaseTestCase):
 
     @pytest.mark.asyncio
     async def test_should_get_with_a_not_existent_name_returns_404(self):
-        request, response = await self.get("/not-existent-name")
+        request, response = await self.request_api("/not-existent-name")
 
         assert response.status == 404
 
@@ -21,7 +21,7 @@ class TestServer(BaseTestCase):
             }
         }
 
-        request, response = await self.get("/mock/schema")
+        request, response = await self.request_api("/mock/schema")
 
         assert response.status == 200
         assert response.json() == expected_schema
@@ -35,7 +35,7 @@ class TestServer(BaseTestCase):
 
         self._mock_repo.list.return_value = expected_list_of_resources
 
-        request, response = await self.get("/mock")
+        request, response = await self.request_api("/mock")
 
         assert response.status == 200
         assert response.json() == expected_list_of_resources
@@ -48,7 +48,7 @@ class TestServer(BaseTestCase):
 
         self._mock_repo.list.return_value = []
 
-        request, response = await self.get(f"/mock?page={expected_page}&size={expected_size}")
+        request, response = await self.request_api(f"/mock?page={expected_page}&size={expected_size}")
 
         assert response.status == 200
         assert response.json() == expected_list_of_resources
@@ -61,7 +61,7 @@ class TestServer(BaseTestCase):
 
         self._mock_repo.get.return_value = expected_resource
 
-        request, response = await self.get("/mock/1")
+        request, response = await self.request_api("/mock/1")
 
         assert response.status == 200
         assert response.json() == expected_resource
@@ -72,7 +72,7 @@ class TestServer(BaseTestCase):
 
         self._mock_repo.get.return_value = expected_resource
 
-        request, response = await self.get("/mock/1")
+        request, response = await self.request_api("/mock/1")
 
         assert response.status == 404
 
@@ -83,7 +83,11 @@ class TestServer(BaseTestCase):
 
         self._mock_repo.create.return_value = expected_id
 
-        request, response = await self.post("/mock", resource)
+        request, response = await self.request_api(
+            path="/mock",
+            method="POST",
+            json=resource
+        )
 
         assert response.status == 201
         assert response.json() == {"id": expected_id}
@@ -97,9 +101,31 @@ class TestServer(BaseTestCase):
 
         self._mock_repo.create.return_value = resource_id
 
-        request, response = await self.post(f"/mock/{resource_id}", resource)
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="POST",
+            json=resource
+        )
 
         assert response.status == 201
         assert response.json() == {"id": resource_id}
 
         self._mock_repo.create.assert_called_once_with(resource, resource_id)
+
+    @pytest.mark.asyncio
+    async def test_should_patch_returns_200(self):
+        resource = {"name": "karl"}
+        resource_id = 'mock-id'
+
+        self._mock_repo.update.return_value = resource_id
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="PATCH",
+            json=resource
+        )
+
+        assert response.status == 200
+        assert response.json() == {}
+
+        self._mock_repo.update.assert_called_once_with(resource_id, resource)
