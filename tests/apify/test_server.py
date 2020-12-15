@@ -113,6 +113,24 @@ class TestServer(BaseTestCase):
         self._mock_repo.create.assert_called_once_with(resource, resource_id)
 
     @pytest.mark.asyncio
+    async def test_should_put_returns_200(self):
+        resource = {"name": "karl"}
+        resource_id = 'mock-id'
+
+        self._mock_repo.update.return_value = resource_id
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="PUT",
+            json=resource
+        )
+
+        assert response.status == 200
+        assert response.json() == {}
+
+        self._mock_repo.update.assert_called_once_with(resource_id, resource)
+
+    @pytest.mark.asyncio
     async def test_should_patch_returns_200(self):
         resource = {"name": "karl"}
         resource_id = 'mock-id'
