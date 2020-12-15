@@ -107,7 +107,7 @@ class App():
         if errors:
             return response.json({"errors": errors}, status=400)
 
-        await self._repo.update(id, request.json)
+        await self._repo.replace(id, request.json)
 
         return response.json({})
 
@@ -123,7 +123,7 @@ class App():
 
     async def _delete(self, request, id):
         await self._repo.delete(id)
-        return response.json()
+        return response.json({})
 
     async def handle_without_id(self, request):
         try:

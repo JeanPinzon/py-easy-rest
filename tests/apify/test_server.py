@@ -117,8 +117,6 @@ class TestServer(BaseTestCase):
         resource = {"name": "karl"}
         resource_id = 'mock-id'
 
-        self._mock_repo.update.return_value = resource_id
-
         request, response = await self.request_api(
             path=f"/mock/{resource_id}",
             method="PUT",
@@ -128,14 +126,12 @@ class TestServer(BaseTestCase):
         assert response.status == 200
         assert response.json() == {}
 
-        self._mock_repo.update.assert_called_once_with(resource_id, resource)
+        self._mock_repo.replace.assert_called_once_with(resource_id, resource)
 
     @pytest.mark.asyncio
     async def test_should_patch_returns_200(self):
         resource = {"name": "karl"}
         resource_id = 'mock-id'
-
-        self._mock_repo.update.return_value = resource_id
 
         request, response = await self.request_api(
             path=f"/mock/{resource_id}",
@@ -147,3 +143,17 @@ class TestServer(BaseTestCase):
         assert response.json() == {}
 
         self._mock_repo.update.assert_called_once_with(resource_id, resource)
+
+    @pytest.mark.asyncio
+    async def test_should_delete_returns_200(self):
+        resource_id = 'mock-id'
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="DELETE",
+        )
+
+        assert response.status == 200
+        assert response.json() == {}
+
+        self._mock_repo.delete.assert_called_once_with(resource_id)
