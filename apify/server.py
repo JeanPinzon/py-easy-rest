@@ -55,7 +55,7 @@ class App():
 
     @staticmethod
     def _get_query_string_arg(query_string, arg_name):
-        args = query_string.get("page", [])
+        args = query_string.get(arg_name, [])
 
         if len(args) == 1:
             return args[0]
@@ -90,6 +90,12 @@ class App():
     async def _list(self, request):
         page = App._get_query_string_arg(request.args, "page")
         size = App._get_query_string_arg(request.args, "size")
+
+        if page is not None:
+            page = int(page)
+
+        if size is not None:
+            size = int(size)
 
         result = await self._repo.list(page, size)
 
@@ -130,7 +136,7 @@ class App():
             return await self._handlers_without_id[request.method](request)
         except DatabaseError as db_error:
             return response.json({"message": db_error.user_message}, status=500)
-        except Exception as e:
+        except Exception:
             return response.json({}, status=500)
 
     async def handle_with_id(self, request, id):
@@ -138,7 +144,7 @@ class App():
             return await self._handlers_with_id[request.method](request, id)
         except DatabaseError as db_error:
             return response.json({"message": db_error.user_message}, status=500)
-        except Exception as e:
+        except Exception:
             return response.json({}, status=500)
 
     async def get_schema(self, request):
