@@ -54,3 +54,24 @@ class TestServer(BaseTestCase):
         assert response.json() == expected_list_of_resources
 
         self._mock_repo.list.assert_called_once_with(expected_page, expected_size)
+
+    @pytest.mark.asyncio
+    async def test_should_get_with_id_returns_200_and_a_resource(self):
+        expected_resource = {"name": "Jean Pinzon"}
+
+        self._mock_repo.get.return_value = expected_resource
+
+        request, response = await self.request_api("/mock/1")
+
+        assert response.status == 200
+        assert response.json() == expected_resource
+
+    @pytest.mark.asyncio
+    async def test_should_get_with_id_returns_404_if_resource_not_found(self):
+        expected_resource = None
+
+        self._mock_repo.get.return_value = expected_resource
+
+        request, response = await self.request_api("/mock/1")
+
+        assert response.status == 404
