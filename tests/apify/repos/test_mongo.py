@@ -3,6 +3,8 @@ import pytest
 from aiounittest import AsyncTestCase
 from unittest.mock import Mock
 
+from bson.objectid import ObjectId
+
 from apify.repos.mongo import MongoRepo
 
 
@@ -18,6 +20,9 @@ class MockMongoCollection():
         pass
 
     async def insert_one(self, data):
+        pass
+
+    async def replace_one(self, query, data):
         pass
 
     def find(self):
@@ -79,3 +84,19 @@ class TestMongoRepo(AsyncTestCase):
         result = await self._mongo_repo.create(document_to_create)
 
         assert result == mocked_id
+
+    @pytest.mark.asyncio
+    async def test_should_replace_document_correctly(self):
+        mocked_id = "551137c2f9e1fac808a5f572"
+        document_to_replace = {"name": "Jean"}
+
+        mocked_collection = Mock(MockMongoCollection)
+
+        self._mongo_repo.set_db_collection(mocked_collection)
+
+        await self._mongo_repo.replace(mocked_id, document_to_replace)
+
+        mocked_collection.replace_one.assert_called_once_with(
+            {'_id': ObjectId(mocked_id)},
+            document_to_replace,
+        )
