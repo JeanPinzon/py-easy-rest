@@ -25,6 +25,9 @@ class MockMongoCollection():
     async def replace_one(self, query, data):
         pass
 
+    async def delete_one(self, query):
+        pass
+
     def find(self):
         pass
 
@@ -117,4 +120,18 @@ class TestMongoRepo(AsyncTestCase):
         mocked_collection.replace_one.assert_called_once_with(
             {'_id': ObjectId(mocked_id)},
             data_to_update,
+        )
+
+    @pytest.mark.asyncio
+    async def test_should_delete_document_correctly(self):
+        mocked_id = "551137c2f9e1fac808a5f572"
+
+        mocked_collection = Mock(MockMongoCollection)
+
+        self._mongo_repo.set_db_collection(mocked_collection)
+
+        await self._mongo_repo.delete(mocked_id)
+
+        mocked_collection.delete_one.assert_called_once_with(
+            {'_id': ObjectId(mocked_id)}
         )

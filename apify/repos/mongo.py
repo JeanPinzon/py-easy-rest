@@ -33,5 +33,4 @@ class MongoRepo(Repo):
         await self.replace((id), merge(data, existent_document))
 
     async def delete(self, id):
-        # TODO
-        return id
+        await self.collection.delete_one({'_id': ObjectId(id)})
