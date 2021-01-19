@@ -1,19 +1,9 @@
-import yaml
-import json
-
-from bson.objectid import ObjectId
-from sanic import Sanic
-from sanic import response
+from sanic import Sanic, response
 
 from apify.repos import DatabaseError
-
-
-class JSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
-
+from apify.utils.json import JSONEncoder
+from apify.utils.yaml import read_api_params_from_yaml
+from apify.utils.request import get_query_string_arg
 
 json_dumps = JSONEncoder().encode
 
@@ -23,7 +13,7 @@ class App():
     def __init__(self, repo, api_config_path):
         self._repo = repo
         self._api_config_path = api_config_path
-        self._api = App._read_api_params_from_yaml(api_config_path)
+        self._api = read_api_params_from_yaml(api_config_path)
 
         self._handlers_without_id = {
             "GET": self._list,
@@ -38,50 +28,29 @@ class App():
             "DELETE": self._delete,
         }
 
-        app = Sanic(self._api["slug"])
-
-        app.add_route(
-            self.handle_without_id,
-            f"/{self._api['slug']}",
-            methods=["GET", "POST"],
-        )
-        app.add_route(
-            self.handle_with_id,
-            f"/{self._api['slug']}/<id>",
-            methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        )
-        app.add_route(
-            self.get_schema,
-            f"/{self._api['slug']}/schema",
-            methods=["GET"],
-        )
-
-        self.app = app
-
-    @staticmethod
-    def _read_api_params_from_yaml(api_config_path):
-        api = None
-
-        with open(api_config_path) as file:
-            api = yaml.load(file, Loader=yaml.FullLoader)
-
-        return api
-
-    @staticmethod
-    def _get_query_string_arg(query_string, arg_name):
-        args = query_string.get(arg_name, [])
-
-        if len(args) == 1:
-            return args[0]
-
-        if len(args) > 1:
-            return args
-
-        return None
+        self.app = Sanic(self._api["slug"])
+        self._define_routes()
 
     @staticmethod
     def _validate(resource):
         return None
+
+    def _define_routes(self):
+        self.app.add_route(
+            self.handle_without_id,
+            f"/{self._api['slug']}",
+            methods=["GET", "POST"],
+        )
+        self.app.add_route(
+            self.handle_with_id,
+            f"/{self._api['slug']}/<id>",
+            methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+        )
+        self.app.add_route(
+            self.get_schema,
+            f"/{self._api['slug']}/schema",
+            methods=["GET"],
+        )
 
     async def _post(self, request, id=None):
         errors = App._validate(request.json)
@@ -102,8 +71,8 @@ class App():
         return response.json({}, status=404, dumps=json_dumps)
 
     async def _list(self, request):
-        page = App._get_query_string_arg(request.args, "page")
-        size = App._get_query_string_arg(request.args, "size")
+        page = get_query_string_arg(request.args, "page")
+        size = get_query_string_arg(request.args, "size")
 
         if page is not None:
             page = int(page)

@@ -25,7 +25,7 @@ class MockRepo(Repo):
         pass
 
 
-class BaseTestCase(AsyncTestCase):
+class BaseSanicTestCase(AsyncTestCase):
 
     def setUp(self):
         self._mock_repo = Mock(MockRepo)

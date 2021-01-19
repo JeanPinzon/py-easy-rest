@@ -16,8 +16,8 @@ class MongoRepo(Repo):
         return document
 
     async def list(self, page, size):
-        # TODO
-        return [{}]
+        cursor = self.collection.find()
+        return await cursor.to_list(length=size)
 
     async def create(self, data, id=None):
         result = await self.collection.insert_one(data)
