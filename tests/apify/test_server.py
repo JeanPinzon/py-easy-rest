@@ -2,10 +2,10 @@ import pytest
 
 from apify.repos import DatabaseError
 
-from tests.apify import BaseTestCase
+from tests.apify import BaseSanicTestCase
 
 
-class TestServer(BaseTestCase):
+class TestServer(BaseSanicTestCase):
 
     @pytest.mark.asyncio
     async def test_should_get_with_a_not_existent_name_returns_404(self):
