@@ -1,5 +1,6 @@
 from bson.objectid import ObjectId
 
+from apify.utils.dictionary import merge
 from apify.repos import Repo
 
 
@@ -28,8 +29,8 @@ class MongoRepo(Repo):
         await self.collection.replace_one({'_id': ObjectId(id)}, data)
 
     async def update(self, id, data):
-        # TODO
-        return id
+        existent_document = await self.get(id)
+        await self.replace((id), merge(data, existent_document))
 
     async def delete(self, id):
         # TODO
