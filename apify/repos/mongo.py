@@ -17,12 +17,18 @@ class MongoRepo(Repo):
         return document
 
     async def list(self, page, size):
+        # TODO: Implement pagination
         cursor = self.collection.find()
         return await cursor.to_list(length=size)
 
     async def create(self, data, id=None):
-        # TODO: Create with id
+        if id is not None:
+            data['_id'] = ObjectId(id)
+        elif '_id' in data:
+            data['_id'] = ObjectId(data['_id'])
+
         result = await self.collection.insert_one(data)
+
         return result.inserted_id
 
     async def replace(self, id, data):

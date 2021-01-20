@@ -75,7 +75,7 @@ class TestMongoRepo(AsyncTestCase):
         mongo_cursor_mock.to_list.assert_called_once_with(length=2)
 
     @pytest.mark.asyncio
-    async def test_should_create_return_correct_document_id(self):
+    async def test_should_create_and_return_correct_document_id_correctly(self):
         mocked_id = "551137c2f9e1fac808a5f572"
         document_to_create = {"name": "Jean"}
 
@@ -85,6 +85,40 @@ class TestMongoRepo(AsyncTestCase):
         self._mongo_repo.set_db_collection(mocked_collection)
 
         result = await self._mongo_repo.create(document_to_create)
+
+        assert result == mocked_id
+
+    @pytest.mark.asyncio
+    async def test_should_create_with_id_from_param_correctly(self):
+        mocked_id = "551137c2f9e1fac808a5f572"
+        document_to_create = {"name": "Jean"}
+
+        mocked_collection = Mock(MockMongoCollection)
+        mocked_collection.insert_one.return_value = MockMongoInsertResult(mocked_id)
+
+        self._mongo_repo.set_db_collection(mocked_collection)
+
+        result = await self._mongo_repo.create(document_to_create, mocked_id)
+
+        mocked_collection.insert_one.assert_called_once_with(
+            {"name": "Jean", "_id": ObjectId(mocked_id)}
+        )
+
+        assert result == mocked_id
+
+    @pytest.mark.asyncio
+    async def test_should_create_with_id_from_document_correctly(self):
+        mocked_id = "551137c2f9e1fac808a5f572"
+        document_to_create = {"name": "Jean", "_id": mocked_id}
+
+        mocked_collection = Mock(MockMongoCollection)
+        mocked_collection.insert_one.return_value = MockMongoInsertResult(mocked_id)
+
+        self._mongo_repo.set_db_collection(mocked_collection)
+
+        result = await self._mongo_repo.create(document_to_create)
+
+        mocked_collection.insert_one.assert_called_once_with(document_to_create)
 
         assert result == mocked_id
 
