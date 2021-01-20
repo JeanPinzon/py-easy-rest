@@ -1,13 +1,11 @@
 name: Mock
 slug: mock
 schema:
+  $schema: "http://json-schema.org/draft-07/schema#"
   properties:
     name:
       type: string
-      required: true
-    color:
-      type: string
-      required: true
-    year: 
-      type: number
-      required: true
+    age:
+      type: integer
+  required:
+    - name

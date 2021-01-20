@@ -1,4 +1,5 @@
 from sanic import Sanic, response
+from jsonschema import Draft7Validator
 
 from apify.repos import DatabaseError
 from apify.utils.json import JSONEncoder
@@ -14,6 +15,7 @@ class App():
         self._repo = repo
         self._api_config_path = api_config_path
         self._api = read_api_params_from_yaml(api_config_path)
+        self._schema = None
 
         self._handlers_without_id = {
             "GET": self._list,
@@ -31,8 +33,25 @@ class App():
         self.app = Sanic(self._api["slug"])
         self._define_routes()
 
-    @staticmethod
-    def _validate(resource):
+    @property
+    def api_schema(self):
+        if self._schema is None:
+            self._schema = self._api["schema"]
+            self._schema["additionalProperties"] = False
+
+        return self._schema
+
+    def _validate(self, resource):
+        validator = Draft7Validator(self.api_schema)
+
+        errors = []
+
+        for error in validator.iter_errors(resource):
+            errors.append(error.message)
+
+        if len(errors) > 0:
+            return errors
+
         return None
 
     def _define_routes(self):
@@ -53,7 +72,7 @@ class App():
         )
 
     async def _post(self, request, id=None):
-        errors = App._validate(request.json)
+        errors = self._validate(request.json)
 
         if errors:
             return response.json({"errors": errors}, status=400, dumps=json_dumps)
@@ -85,7 +104,7 @@ class App():
         return response.json(result, dumps=json_dumps)
 
     async def _put(self, request, id):
-        errors = App._validate(request.json)
+        errors = self._validate(request.json)
 
         if errors:
             return response.json({"errors": errors}, status=400, dumps=json_dumps)
@@ -95,7 +114,7 @@ class App():
         return response.json({}, dumps=json_dumps)
 
     async def _patch(self, request, id):
-        errors = App._validate(request.json)
+        errors = self._validate(request.json)
 
         if errors:
             return response.json({"errors": errors}, status=400, dumps=json_dumps)
@@ -125,4 +144,4 @@ class App():
             return response.json({}, status=500, dumps=json_dumps)
 
     async def get_schema(self, request):
-        return response.json(self._api["schema"], dumps=json_dumps)
+        return response.json(self.api_schema, dumps=json_dumps)

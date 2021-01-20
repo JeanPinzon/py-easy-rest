@@ -16,11 +16,13 @@ class TestServer(BaseSanicTestCase):
     @pytest.mark.asyncio
     async def test_should_get_schema_returns_200(self):
         expected_schema = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
             "properties": {
-                "name": {"type": "string", "required": True},
-                "color": {"type": "string", "required": True},
-                "year": {"type": "number", "required": True},
-            }
+                "name": {"type": "string"},
+                "age": {"type": "integer"},
+            },
+            "required": ["name"],
+            "additionalProperties": False,
         }
 
         request, response = await self.request_api("/mock/schema")
@@ -99,6 +101,24 @@ class TestServer(BaseSanicTestCase):
         self._mock_repo.create.assert_called_once_with(resource, None)
 
     @pytest.mark.asyncio
+    async def test_should_post_returns_400_and_errors_when_data_is_not_valid(self):
+        resource = {"name": "karl", "age": "twenty eight"}
+        expected_id = 'mock-id'
+
+        self._mock_repo.create.return_value = expected_id
+
+        request, response = await self.request_api(
+            path="/mock",
+            method="POST",
+            json=resource
+        )
+
+        assert response.status == 400
+        assert response.json() == {"errors": ["'twenty eight' is not of type 'integer'"]}
+
+        self._mock_repo.create.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_should_post_with_id_returns_201_and_resource_id(self):
         resource = {"name": "karl"}
         resource_id = 'mock-id'
@@ -133,6 +153,22 @@ class TestServer(BaseSanicTestCase):
         self._mock_repo.replace.assert_called_once_with(resource_id, resource)
 
     @pytest.mark.asyncio
+    async def test_should_put_returns_400_and_errors_when_data_is_not_valid(self):
+        resource = {"name": "karl", "age": "twenty eight"}
+        resource_id = 'mock-id'
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="PUT",
+            json=resource
+        )
+
+        assert response.status == 400
+        assert response.json() == {"errors": ["'twenty eight' is not of type 'integer'"]}
+
+        self._mock_repo.create.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_should_patch_returns_200(self):
         resource = {"name": "karl"}
         resource_id = 'mock-id'
@@ -147,6 +183,22 @@ class TestServer(BaseSanicTestCase):
         assert response.json() == {}
 
         self._mock_repo.update.assert_called_once_with(resource_id, resource)
+
+    @pytest.mark.asyncio
+    async def test_should_patch_returns_400_and_errors_when_data_is_not_valid(self):
+        resource = {"name": "karl", "age": "twenty eight"}
+        resource_id = 'mock-id'
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="PATCH",
+            json=resource
+        )
+
+        assert response.status == 400
+        assert response.json() == {"errors": ["'twenty eight' is not of type 'integer'"]}
+
+        self._mock_repo.create.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_should_delete_returns_200(self):

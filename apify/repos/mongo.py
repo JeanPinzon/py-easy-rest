@@ -27,8 +27,6 @@ class MongoRepo(Repo):
     async def create(self, data, id=None):
         if id is not None:
             data['_id'] = ObjectId(id)
-        elif '_id' in data:
-            data['_id'] = ObjectId(data['_id'])
 
         result = await self.collection.insert_one(data)
 

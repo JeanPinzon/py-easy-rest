@@ -1,3 +1,4 @@
 sanic==20.9.1
 motor==2.3.0
 PyYAML==5.3.1
+jsonschema==3.2.0
