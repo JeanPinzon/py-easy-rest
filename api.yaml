@@ -1,5 +1,9 @@
 name: Cars
 slug: cars
+db:
+  type: mongo
+  connectionString: "mongodb://localhost:27017/default-db"
+  collectionName: oi
 schema:
   $schema: "http://json-schema.org/draft-07/schema#"
   properties:

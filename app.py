@@ -11,9 +11,9 @@ if __name__ == '__main__':
 
     @apifyApp.app.listener('before_server_start')
     def init(sanic, loop):
-        mongo_db_instance = AsyncIOMotorClient("mongodb://localhost:27017/default-db")
+        mongo_db_instance = AsyncIOMotorClient(apifyApp.db_connection_string)
         db = mongo_db_instance.get_default_database()
-        collection = db["oi"]
+        collection = db[apifyApp.db_collection_name]
         repo.set_db_collection(collection)
 
     apifyApp.app.run(

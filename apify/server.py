@@ -41,6 +41,14 @@ class App():
 
         return self._schema
 
+    @property
+    def db_connection_string(self):
+        return self._api['db']['connectionString']
+
+    @property
+    def db_collection_name(self):
+        return self._api['db']['collectionName']
+
     def _validate(self, resource):
         validator = Draft7Validator(self.api_schema)
 
