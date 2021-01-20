@@ -17,8 +17,11 @@ class MongoRepo(Repo):
         return document
 
     async def list(self, page, size):
-        # TODO: Implement pagination
-        cursor = self.collection.find()
+        page = page or 0
+        size = size or 30
+
+        cursor = self.collection.find().skip(page * size).limit(size)
+
         return await cursor.to_list(length=size)
 
     async def create(self, data, id=None):

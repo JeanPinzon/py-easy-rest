@@ -10,6 +10,12 @@ from apify.repos.mongo import MongoRepo
 
 class MockMongoCursor():
 
+    def skip(self, skip):
+        pass
+
+    def limit(self, limit):
+        pass
+
     async def to_list(self, length):
         pass
 
@@ -63,6 +69,8 @@ class TestMongoRepo(AsyncTestCase):
 
         mongo_cursor_mock = Mock(MockMongoCursor)
         mongo_cursor_mock.to_list.return_value = expected_documents
+        mongo_cursor_mock.skip.return_value = mongo_cursor_mock
+        mongo_cursor_mock.limit.return_value = mongo_cursor_mock
 
         mocked_collection = Mock(MockMongoCollection)
         mocked_collection.find.return_value = mongo_cursor_mock
@@ -72,7 +80,26 @@ class TestMongoRepo(AsyncTestCase):
         result = await self._mongo_repo.list(page=0, size=2)
 
         assert result == expected_documents
-        mongo_cursor_mock.to_list.assert_called_once_with(length=2)
+
+    @pytest.mark.asyncio
+    async def test_should_list_paginate_correctly(self):
+        expected_documents = []
+
+        mongo_cursor_mock = Mock(MockMongoCursor)
+        mongo_cursor_mock.to_list.return_value = expected_documents
+        mongo_cursor_mock.skip.return_value = mongo_cursor_mock
+        mongo_cursor_mock.limit.return_value = mongo_cursor_mock
+
+        mocked_collection = Mock(MockMongoCollection)
+        mocked_collection.find.return_value = mongo_cursor_mock
+
+        self._mongo_repo.set_db_collection(mocked_collection)
+
+        await self._mongo_repo.list(page=3, size=5)
+
+        mongo_cursor_mock.to_list.assert_called_once_with(length=5)
+        mongo_cursor_mock.skip.assert_called_once_with(15)
+        mongo_cursor_mock.limit.assert_called_once_with(5)
 
     @pytest.mark.asyncio
     async def test_should_create_and_return_correct_document_id_correctly(self):
