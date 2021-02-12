@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="now-you-rest",
-    version="0.0.8",
+    version="0.0.9",
     author="Jean Pinzon",
     author_email="jean.pinzon1@gmail.com",
     description="The simplest way to have a rest api",

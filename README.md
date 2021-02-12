@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     @nyrApp.app.listener('before_server_start')
     def init(nyr, loop):
-        mongo_db_instance = AsyncIOMotorClient("mongodb+srv://apify:Hquj3w3D328FlOal@cluster0.lybvj.mongodb.net/default?retryWrites=true&w=majority")
+        mongo_db_instance = AsyncIOMotorClient("mongodb://localhost:27017")
         db = mongo_db_instance.get_default_database()
         collection = db["default"]
         repo.set_db_collection(collection)
@@ -56,8 +56,15 @@ schema:
 
 ```
 
+
+### How to run
+
+Just run your application with `python main.py`. Now you can access `http://localhost:8000/example-api`
+
+
 ### Next steps sorted by priority
 
-1. Add cache strategy using redis
-2. Add logs
-3. Improve exceptions handling
+1. Route to render api docs 
+2. Add cache strategy using redis
+3. Add logs
+4. Improve exceptions handling
