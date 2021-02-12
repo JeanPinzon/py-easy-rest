@@ -1,2 +1,0 @@
-DEBUG = True
-AUTO_RELOAD = True

@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 from aiounittest import AsyncTestCase
-from apify.server import App
-from apify.repos import Repo
+from now_you_rest.server import App
+from now_you_rest.repos import Repo
 
 
 class MockRepo(Repo):
@@ -29,10 +29,10 @@ class BaseSanicTestCase(AsyncTestCase):
 
     def setUp(self):
         self._mock_repo = Mock(MockRepo)
-        self._apify = App(self._mock_repo, "./tests/apify/api-mock.yaml")
+        self._now_you_rest = App(self._mock_repo, "./tests/now_you_rest/api-mock.yaml")
 
     async def request_api(self, path, method="GET", json=None):
-        client = self._apify.app.asgi_client
+        client = self._now_you_rest.app.asgi_client
 
         request, response = await client.request(method, path, json=json)
 

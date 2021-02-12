@@ -1,10 +1,10 @@
 from sanic import Sanic, response
 from jsonschema import Draft7Validator
 
-from apify.repos import DatabaseError
-from apify.utils.json import JSONEncoder
-from apify.utils.yaml import read_api_params_from_yaml
-from apify.utils.request import get_query_string_arg
+from now_you_rest.repos import DatabaseError
+from now_you_rest.utils.json import JSONEncoder
+from now_you_rest.utils.yaml import read_api_params_from_yaml
+from now_you_rest.utils.request import get_query_string_arg
 
 json_dumps = JSONEncoder().encode
 

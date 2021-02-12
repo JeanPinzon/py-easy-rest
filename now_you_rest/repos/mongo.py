@@ -1,7 +1,7 @@
 from bson.objectid import ObjectId
 
-from apify.utils.dictionary import merge
-from apify.repos import Repo
+from now_you_rest.utils.dictionary import merge
+from now_you_rest.repos import Repo
 
 
 class MongoRepo(Repo):

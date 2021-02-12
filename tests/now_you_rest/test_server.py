@@ -1,8 +1,8 @@
 import pytest
 
-from apify.repos import DatabaseError
+from now_you_rest.repos import DatabaseError
 
-from tests.apify import BaseSanicTestCase
+from tests.now_you_rest import BaseSanicTestCase
 
 
 class TestServer(BaseSanicTestCase):

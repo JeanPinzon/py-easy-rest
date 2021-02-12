@@ -1,0 +1,5 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "twine==3.3.0",
+]
