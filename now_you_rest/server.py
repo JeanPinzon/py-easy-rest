@@ -1,4 +1,5 @@
 from sanic import Sanic, response
+from sanic_openapi import doc, swagger_blueprint
 from jsonschema import Draft7Validator
 
 from now_you_rest.repos import DatabaseError
@@ -17,20 +18,14 @@ class App():
         self._api = read_api_params_from_yaml(api_config_path)
         self._schema = None
 
-        self._handlers_without_id = {
-            "GET": self._list,
-            "POST": self._post,
-        }
-
-        self._handlers_with_id = {
-            "GET": self._get,
-            "POST": self._post,
-            "PATCH": self._patch,
-            "PUT": self._put,
-            "DELETE": self._delete,
-        }
-
         self.app = Sanic(self._api["slug"])
+
+        self.app.blueprint(swagger_blueprint)
+
+        self.app.config["API_TITLE"] = self._api["name"]
+
+        self.app.error_handler.add(DatabaseError, App._handle_database_error)
+
         self._define_routes()
 
     @property
@@ -41,13 +36,9 @@ class App():
 
         return self._schema
 
-    @property
-    def db_connection_string(self):
-        return self._api['db']['connectionString']
-
-    @property
-    def db_collection_name(self):
-        return self._api['db']['collectionName']
+    @staticmethod
+    async def _handle_database_error(request, exception):
+        return response.json({"message": exception.user_message}, status=500, dumps=json_dumps)
 
     def _validate(self, resource):
         validator = Draft7Validator(self.api_schema)
@@ -63,93 +54,122 @@ class App():
         return None
 
     def _define_routes(self):
-        self.app.add_route(
-            self.handle_without_id,
-            f"/{self._api['slug']}",
-            methods=["GET", "POST"],
+        slug = self._api['slug']
+        name = self._api['name']
+
+        @self.app.get(f"/{slug}/schema")
+        @doc.summary("Get JSON Schema")
+        @doc.description("Route to get the api JSON Schema.")
+        @doc.response(200, None, description="Success to get JSON Schema.")
+        async def get_schema(request):
+            return response.json(self.api_schema, dumps=json_dumps)
+
+        @self.app.get(f"/{slug}")
+        @doc.summary(f"List {name}")
+        @doc.description(
+            f"Route to list all {name}. "
+            "You can use the parameters page and size. Default values: page=0, size=30."
         )
-        self.app.add_route(
-            self.handle_with_id,
-            f"/{self._api['slug']}/<id>",
-            methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        )
-        self.app.add_route(
-            self.get_schema,
-            f"/{self._api['slug']}/schema",
-            methods=["GET"],
-        )
+        @doc.response(200, None, description=f"Success to list {name}.")
+        @doc.response(500, None, description="Internal server error.")
+        @doc.consumes(doc.Integer(name="page"), location="query")
+        @doc.consumes(doc.Integer(name="size"), location="query")
+        @doc.produces(doc.List(doc.Dictionary()))
+        async def _list(request):
+            page = get_query_string_arg(request.args, "page")
+            size = get_query_string_arg(request.args, "size")
 
-    async def _post(self, request, id=None):
-        errors = self._validate(request.json)
+            if page is not None:
+                page = int(page)
 
-        if errors:
-            return response.json({"errors": errors}, status=400, dumps=json_dumps)
+            if size is not None:
+                size = int(size)
 
-        resource_id = await self._repo.create(request.json, id)
+            result = await self._repo.list(page, size)
 
-        return response.json({"id": resource_id}, status=201, dumps=json_dumps)
-
-    async def _get(self, request, id):
-        result = await self._repo.get(id)
-
-        if result:
             return response.json(result, dumps=json_dumps)
 
-        return response.json({}, status=404, dumps=json_dumps)
+        @self.app.post(f"/{slug}")
+        @self.app.post(f"/{slug}/<id>")
+        @doc.summary(f"Create a new {name}")
+        @doc.description(
+            f"Route to create a new document of {name}. "
+            "Take a look at the schema route to know what properties you must send."
+        )
+        @doc.response(201, None, description=f"Success to create a new {name} document.")
+        @doc.response(400, None, description="Validation error.")
+        @doc.response(500, None, description="Internal server error.")
+        @doc.consumes(doc.JsonBody({}), location="body")
+        async def _post(request, id=None):
+            errors = self._validate(request.json)
 
-    async def _list(self, request):
-        page = get_query_string_arg(request.args, "page")
-        size = get_query_string_arg(request.args, "size")
+            if errors:
+                return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-        if page is not None:
-            page = int(page)
+            resource_id = await self._repo.create(request.json, id)
 
-        if size is not None:
-            size = int(size)
+            return response.json({"id": resource_id}, status=201, dumps=json_dumps)
 
-        result = await self._repo.list(page, size)
+        @self.app.get(f"/{slug}/<id>")
+        @doc.summary("Get a document by id")
+        @doc.description(f"Route to get a {name} document by id.")
+        @doc.response(200, None, description="Success to get the document.")
+        @doc.response(404, None, description="Document not found.")
+        @doc.response(500, None, description="Internal server error.")
+        @doc.produces(doc.Dictionary())
+        async def _get(request, id):
+            result = await self._repo.get(id)
 
-        return response.json(result, dumps=json_dumps)
+            if result:
+                return response.json(result, dumps=json_dumps)
 
-    async def _put(self, request, id):
-        errors = self._validate(request.json)
+            return response.json({}, status=404, dumps=json_dumps)
 
-        if errors:
-            return response.json({"errors": errors}, status=400, dumps=json_dumps)
+        @self.app.put(f"/{slug}/<id>")
+        @doc.summary("Replace a document by id")
+        @doc.description(
+            f"Route to replace a document of {name}. "
+            "Take a look at the schema route to know what properties you must send."
+        )
+        @doc.response(200, None, description="Success to replace the document.")
+        @doc.response(400, None, description="Validation error.")
+        @doc.response(500, None, description="Internal server error.")
+        @doc.consumes(doc.JsonBody({}), location="body")
+        async def _put(request, id):
+            errors = self._validate(request.json)
 
-        await self._repo.replace(id, request.json)
+            if errors:
+                return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-        return response.json({}, dumps=json_dumps)
+            await self._repo.replace(id, request.json)
 
-    async def _patch(self, request, id):
-        errors = self._validate(request.json)
+            return response.json({}, dumps=json_dumps)
 
-        if errors:
-            return response.json({"errors": errors}, status=400, dumps=json_dumps)
+        @self.app.patch(f"/{slug}/<id>")
+        @doc.summary("Partial update a document by id")
+        @doc.description(
+            f"Route to partial update a document of {name}. "
+            "Take a look at the schema route to know what properties you must send."
+        )
+        @doc.response(200, None, description="Success to partial update the document.")
+        @doc.response(400, None, description="Validation error.")
+        @doc.response(500, None, description="Internal server error.")
+        @doc.consumes(doc.JsonBody({}), location="body")
+        async def _patch(request, id):
+            errors = self._validate(request.json)
 
-        await self._repo.update(id, request.json)
+            if errors:
+                return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-        return response.json({}, dumps=json_dumps)
+            await self._repo.update(id, request.json)
 
-    async def _delete(self, request, id):
-        await self._repo.delete(id)
-        return response.json({}, dumps=json_dumps)
+            return response.json({}, dumps=json_dumps)
 
-    async def handle_without_id(self, request):
-        try:
-            return await self._handlers_without_id[request.method](request)
-        except DatabaseError as db_error:
-            return response.json({"message": db_error.user_message}, status=500, dumps=json_dumps)
-        except Exception:
-            return response.json({}, status=500, dumps=json_dumps)
-
-    async def handle_with_id(self, request, id):
-        try:
-            return await self._handlers_with_id[request.method](request, id)
-        except DatabaseError as db_error:
-            return response.json({"message": db_error.user_message}, status=500, dumps=json_dumps)
-        except Exception:
-            return response.json({}, status=500, dumps=json_dumps)
-
-    async def get_schema(self, request):
-        return response.json(self.api_schema, dumps=json_dumps)
+        @self.app.delete(f"/{slug}/<id>")
+        @doc.summary("Delere a document by id")
+        @doc.description(f"Route to delete a document of {name}.")
+        @doc.response(200, None, description="Success to delete the document.")
+        @doc.response(500, None, description="Internal server error.")
+        async def _delete(request, id):
+            await self._repo.delete(id)
+            return response.json({}, dumps=json_dumps)

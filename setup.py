@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="now-you-rest",
-    version="0.0.9",
+    version="0.0.10",
     author="Jean Pinzon",
     author_email="jean.pinzon1@gmail.com",
     description="The simplest way to have a rest api",
@@ -23,6 +23,7 @@ setuptools.setup(
     ),
     install_requires=[
         "sanic==20.9.1",
+        "sanic-openapi==0.6.2",
         "motor==2.3.0",
         "PyYAML==5.3.1",
         "jsonschema==3.2.0",

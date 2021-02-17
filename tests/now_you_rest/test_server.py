@@ -221,7 +221,6 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/mock")
 
         assert response.status == 500
-        assert response.json() == {}
 
         self._mock_repo.list.assert_called_once()
 
@@ -234,7 +233,6 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api(f"/mock/{resource_id}")
 
         assert response.status == 500
-        assert response.json() == {}
 
         self._mock_repo.get.assert_called_once_with(resource_id)
 

@@ -5,13 +5,16 @@ setup: install
 	pip install -r requirements-test.txt
 
 test:
-	pytest -x -s -v . --cov=now_you_rest/ --cov-report=term --cov-report=html --cov-report=xml
+	pytest -x -s -v . --cov=now_you_rest/ --cov-report=term --cov-report=html --cov-report=xml --show-capture=no
 
 lint: 
 	flake8 --statistics
 
 run-mongo:
 	docker run -p 27017:27017 mongo
+
+run-example:
+	PYTHONPATH="." python example/main.py
 
 clean:
 	rm -rf cover
