@@ -2,19 +2,22 @@ from sanic import Sanic, response
 from sanic_openapi import doc, swagger_blueprint
 from jsonschema import Draft7Validator
 
-from now_you_rest.repos import DatabaseError
+from now_you_rest import NyrApplicationError
+from now_you_rest.caches.dummy import DummyCache
 from now_you_rest.utils.json import JSONEncoder
 from now_you_rest.utils.yaml import read_api_params_from_yaml
 from now_you_rest.utils.request import get_query_string_arg
+
 
 json_dumps = JSONEncoder().encode
 
 
 class App():
 
-    def __init__(self, repo, api_config_path):
+    def __init__(self, repo, api_config_path, cache=DummyCache()):
         self._repo = repo
         self._api_config_path = api_config_path
+        self._cache = cache
         self._api = read_api_params_from_yaml(api_config_path)
         self._schema = None
 
@@ -24,7 +27,7 @@ class App():
 
         self.app.config["API_TITLE"] = self._api["name"]
 
-        self.app.error_handler.add(DatabaseError, App._handle_database_error)
+        self.app.error_handler.add(NyrApplicationError, App._handle_database_error)
 
         self._define_routes()
 
@@ -85,7 +88,16 @@ class App():
             if size is not None:
                 size = int(size)
 
+            cache_key = f"list.page-{page}.size-{size}"
+
+            result_from_cache = await self._cache.get(cache_key)
+
+            if result_from_cache is not None:
+                return response.json(result_from_cache, dumps=json_dumps)
+
             result = await self._repo.list(page, size)
+
+            await self._cache.set(cache_key, result)
 
             return response.json(result, dumps=json_dumps)
 
@@ -118,9 +130,17 @@ class App():
         @doc.response(500, None, description="Internal server error.")
         @doc.produces(doc.Dictionary())
         async def _get(request, id):
+            cache_key = f"get.id-{id}"
+
+            result_from_cache = await self._cache.get(cache_key)
+
+            if result_from_cache is not None:
+                return response.json(result_from_cache, dumps=json_dumps)
+
             result = await self._repo.get(id)
 
             if result:
+                await self._cache.set(cache_key, result)
                 return response.json(result, dumps=json_dumps)
 
             return response.json({}, status=404, dumps=json_dumps)
