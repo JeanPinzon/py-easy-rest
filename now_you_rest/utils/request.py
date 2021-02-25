@@ -1,10 +1,11 @@
 def get_query_string_arg(query_string, arg_name):
-    args = query_string.get(arg_name, [])
+    arg = query_string.get(arg_name, [])
 
-    if len(args) == 1:
-        return args[0]
+    if type(arg) is not list:
+        return arg
 
-    if len(args) > 1:
-        return args
+    if len(arg) == 1:
+        return arg[0]
 
-    return None
+    if len(arg) > 1:
+        return arg
