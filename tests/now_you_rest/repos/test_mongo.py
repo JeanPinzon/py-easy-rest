@@ -166,24 +166,6 @@ class TestMongoRepo(AsyncTestCase):
         )
 
     @pytest.mark.asyncio
-    async def test_should_update_document_correctly(self):
-        mocked_id = "551137c2f9e1fac808a5f572"
-        saved_document = {"name": "Jean"}
-        data_to_update = {"name": "New name"}
-
-        mocked_collection = Mock(MockMongoCollection)
-        mocked_collection.find_one.return_value = saved_document
-
-        self._mongo_repo.set_db_collection(mocked_collection)
-
-        await self._mongo_repo.update(mocked_id, data_to_update)
-
-        mocked_collection.replace_one.assert_called_once_with(
-            {'_id': ObjectId(mocked_id)},
-            data_to_update,
-        )
-
-    @pytest.mark.asyncio
     async def test_should_delete_document_correctly(self):
         mocked_id = "551137c2f9e1fac808a5f572"
 

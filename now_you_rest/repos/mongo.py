@@ -1,6 +1,5 @@
 from bson.objectid import ObjectId
 
-from now_you_rest.utils.dictionary import merge
 from now_you_rest.repos import Repo
 
 
@@ -34,10 +33,6 @@ class MongoRepo(Repo):
 
     async def replace(self, id, data):
         await self.collection.replace_one({'_id': ObjectId(id)}, data)
-
-    async def update(self, id, data):
-        existent_document = await self.get(id)
-        await self.replace((id), merge(data, existent_document))
 
     async def delete(self, id):
         await self.collection.delete_one({'_id': ObjectId(id)})

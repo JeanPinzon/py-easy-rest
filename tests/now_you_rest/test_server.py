@@ -1,4 +1,5 @@
 import pytest
+import json
 
 from now_you_rest.repos import DatabaseError
 
@@ -39,12 +40,28 @@ class TestServer(BaseSanicTestCase):
 
         self._mock_repo.list.return_value = expected_list_of_resources
 
+        await self._cache.delete("list.page-None.size-None")
+
         request, response = await self.request_api("/mock")
 
         assert response.status == 200
         assert response.json() == expected_list_of_resources
 
         self._mock_repo.list.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_should_get_without_id_returns_200_and_a_cached_list(self):
+        cached_list = [
+            {"name": "Jean Pinzon"},
+            {"name": "Alycio Neto"},
+        ]
+
+        await self._cache.set("list.page-None.size-None", json.dumps(cached_list))
+
+        request, response = await self.request_api("/mock")
+
+        assert response.status == 200
+        assert response.json() == cached_list
 
     @pytest.mark.asyncio
     async def test_should_get_without_id_pass_pagination_params_to_repo_when_receives_it_as_query_string(self):
@@ -73,12 +90,23 @@ class TestServer(BaseSanicTestCase):
         assert response.json() == expected_resource
 
     @pytest.mark.asyncio
+    async def test_should_get_with_id_returns_200_and_cached_resource(self):
+        cached_resource = {"name": "Jean Pinzon"}
+
+        await self._cache.set("get.id-6", json.dumps(cached_resource))
+
+        request, response = await self.request_api("/mock/6")
+
+        assert response.status == 200
+        assert response.json() == cached_resource
+
+    @pytest.mark.asyncio
     async def test_should_get_with_id_returns_404_if_resource_not_found(self):
         expected_resource = None
 
         self._mock_repo.get.return_value = expected_resource
 
-        request, response = await self.request_api("/mock/1")
+        request, response = await self.request_api("/mock/2")
 
         assert response.status == 404
 
@@ -153,6 +181,24 @@ class TestServer(BaseSanicTestCase):
         self._mock_repo.replace.assert_called_once_with(resource_id, resource)
 
     @pytest.mark.asyncio
+    async def test_should_put_returns_404(self):
+        resource = {"name": "karl"}
+        resource_id = 'not-found-id-put'
+
+        self._mock_repo.get.return_value = None
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="PUT",
+            json=resource
+        )
+
+        assert response.status == 404
+        assert response.json() == {}
+
+        self._mock_repo.replace.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_should_put_returns_400_and_errors_when_data_is_not_valid(self):
         resource = {"name": "karl", "age": "twenty eight"}
         resource_id = 'mock-id'
@@ -173,6 +219,8 @@ class TestServer(BaseSanicTestCase):
         resource = {"name": "karl"}
         resource_id = 'mock-id'
 
+        self._mock_repo.get.return_value = {"name": "jean"}
+
         request, response = await self.request_api(
             path=f"/mock/{resource_id}",
             method="PATCH",
@@ -182,12 +230,32 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 200
         assert response.json() == {}
 
-        self._mock_repo.update.assert_called_once_with(resource_id, resource)
+        self._mock_repo.replace.assert_called_once_with(resource_id, resource)
+
+    @pytest.mark.asyncio
+    async def test_should_patch_returns_404(self):
+        resource = {"name": "karl"}
+        resource_id = 'not-found-id-patch'
+
+        self._mock_repo.get.return_value = None
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="PATCH",
+            json=resource
+        )
+
+        assert response.status == 404
+        assert response.json() == {}
+
+        self._mock_repo.replace.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_should_patch_returns_400_and_errors_when_data_is_not_valid(self):
         resource = {"name": "karl", "age": "twenty eight"}
         resource_id = 'mock-id'
+
+        self._mock_repo.get.return_value = {"name": "jean"}
 
         request, response = await self.request_api(
             path=f"/mock/{resource_id}",
@@ -215,10 +283,28 @@ class TestServer(BaseSanicTestCase):
         self._mock_repo.delete.assert_called_once_with(resource_id)
 
     @pytest.mark.asyncio
+    async def test_should_delete_returns_404(self):
+        resource = {"name": "karl"}
+        resource_id = 'not-found-id-delete'
+
+        self._mock_repo.get.return_value = None
+
+        request, response = await self.request_api(
+            path=f"/mock/{resource_id}",
+            method="DELETE",
+            json=resource
+        )
+
+        assert response.status == 404
+        assert response.json() == {}
+
+        self._mock_repo.replace.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_should_request_returns_500_when_it_result_in_a_not_expected_error(self):
         self._mock_repo.list.side_effect = Exception()
 
-        request, response = await self.request_api("/mock")
+        request, response = await self.request_api("/mock?page=321")
 
         assert response.status == 500
 
@@ -226,15 +312,11 @@ class TestServer(BaseSanicTestCase):
 
     @pytest.mark.asyncio
     async def test_should_request_with_id_returns_500_when_it_result_in_a_not_expected_error(self):
-        resource_id = 'mock-id'
-
         self._mock_repo.get.side_effect = Exception()
 
-        request, response = await self.request_api(f"/mock/{resource_id}")
+        request, response = await self.request_api("/mock/234")
 
         assert response.status == 500
-
-        self._mock_repo.get.assert_called_once_with(resource_id)
 
     @pytest.mark.asyncio
     async def test_should_request_returns_500_and_message_when_it_result_in_a_db_error(self):
@@ -245,7 +327,7 @@ class TestServer(BaseSanicTestCase):
             user_message=expected_error_message
         )
 
-        request, response = await self.request_api("/mock")
+        request, response = await self.request_api("/mock?page=123")
 
         assert response.status == 500
         assert response.json() == {"message": expected_error_message}

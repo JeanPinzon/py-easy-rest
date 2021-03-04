@@ -2,11 +2,14 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from now_you_rest.server import App
 from now_you_rest.repos.mongo import MongoRepo
+from now_you_rest.caches.redis import RedisCache
 
 
 if __name__ == '__main__':
     repo = MongoRepo()
-    nyrApp = App(repo, "./example/api.yaml")
+    cache = RedisCache("redis://localhost")
+
+    nyrApp = App(repo, "./example/api.yaml", cache=cache)
 
     @nyrApp.app.listener('before_server_start')
     def init(nyr, loop):

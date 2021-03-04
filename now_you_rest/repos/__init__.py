@@ -48,13 +48,6 @@ class Repo():
         """
         raise NotImplementedError
 
-    async def update(self, id, data):
-        """
-        Receives <data> with the partial resource to be saved and <id>,
-        replace just the partial resource received in db.
-        """
-        raise NotImplementedError
-
     async def delete(self, id):
         """
         Receives the <id> and delete it from db.
