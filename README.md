@@ -64,7 +64,5 @@ Just run your application with `python main.py`. Now you can access `http://loca
 
 ### Next steps sorted by priority
  
-1. Add cache strategy using redis
-2. Add logs
-3. Improve exceptions handling
-4. Create events strategy to provide integrations
+1. Improve exceptions handling
+2. Create events strategy to provide integrations
