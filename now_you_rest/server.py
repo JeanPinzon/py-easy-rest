@@ -2,6 +2,7 @@
 import json
 
 from sanic import Sanic, response
+from sanic.log import logger
 from sanic_openapi import doc, swagger_blueprint
 from jsonschema import Draft7Validator
 
@@ -31,7 +32,7 @@ class App():
 
         self.app.config["API_TITLE"] = self._api["name"]
 
-        self.app.error_handler.add(NyrApplicationError, App._handle_database_error)
+        self.app.error_handler.add(NyrApplicationError, App._handle_app_error)
 
         self._define_routes()
 
@@ -44,7 +45,8 @@ class App():
         return self._schema
 
     @staticmethod
-    async def _handle_database_error(request, exception):
+    async def _handle_app_error(request, exception):
+        logger.exception(f"Failed to handle request {exception}")
         return response.json({"message": exception.user_message}, status=500, dumps=json_dumps)
 
     def _validate(self, resource):
@@ -97,8 +99,11 @@ class App():
             cached = await self._cache.get(cache_key)
 
             if cached is not None:
+                logger.info(f"Found cache result with key {cache_key}")
                 result = json.loads(cached)
                 return response.json(result, dumps=json_dumps)
+
+            logger.info(f"Not found cache result with key {cache_key}")
 
             result = await self._repo.list(page, size)
 
@@ -144,8 +149,11 @@ class App():
             cached = await self._cache.get(cache_key)
 
             if cached is not None:
+                logger.info(f"Found cache result with key {cache_key}")
                 result = json.loads(cached)
                 return response.json(result, dumps=json_dumps)
+
+            logger.info(f"Not found cache result with key {cache_key}")
 
             result = await self._repo.get(id)
 
