@@ -1,10 +1,10 @@
 
 import json
 
+from jsonschema import Draft7Validator
 from sanic import Sanic, response
 from sanic.log import logger
 from sanic_openapi import doc, swagger_blueprint
-from jsonschema import Draft7Validator
 
 from now_you_rest import NyrApplicationError
 from now_you_rest.caches.dummy import DummyCache
@@ -19,10 +19,20 @@ json_dumps = JSONEncoder().encode
 
 class App():
 
-    def __init__(self, repo, api_config_path, cache=DummyCache()):
+    def __init__(
+        self,
+        repo,
+        api_config_path,
+        cache=DummyCache(),
+        cache_list_seconds_ttl=10,
+        cache_get_seconds_ttl=60 * 30,  # thirty minutes
+    ):
         self._repo = repo
         self._api_config_path = api_config_path
         self._cache = cache
+        self._cache_list_seconds_ttl = cache_list_seconds_ttl
+        self._cache_get_seconds_ttl = cache_get_seconds_ttl
+
         self._api = read_api_params_from_yaml(api_config_path)
         self._schema = None
 
@@ -107,7 +117,7 @@ class App():
 
             result = await self._repo.list(page, size)
 
-            await self._cache.set(cache_key, json_dumps(result), ttl=10)
+            await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_list_seconds_ttl)
 
             return response.json(result, dumps=json_dumps)
 
@@ -158,7 +168,7 @@ class App():
             result = await self._repo.get(id)
 
             if result:
-                await self._cache.set(cache_key, json_dumps(result), ttl=60)
+                await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_get_seconds_ttl)
                 return response.json(result, dumps=json_dumps)
 
             return response.json({}, status=404, dumps=json_dumps)
