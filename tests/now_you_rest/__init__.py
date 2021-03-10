@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 from aiounittest import AsyncTestCase
 from now_you_rest.server import App
-from now_you_rest.repos import Repo
+from now_you_rest.repos.memory import MemoryRepo
 from now_you_rest.caches.memory import MemoryCache
 
 
@@ -19,32 +19,14 @@ api_config_mock = {
 }
 
 
-class MockRepo(Repo):
-
-    async def get(self, id):
-        pass
-
-    async def list(self, page, size):
-        pass
-
-    async def create(self, data, id=None):
-        pass
-
-    async def replace(self, id, data):
-        pass
-
-    async def delete(self, id):
-        pass
-
-
 class BaseSanicTestCase(AsyncTestCase):
 
     def setUp(self):
-        self._mock_repo = Mock(MockRepo)
+        self._mock_repo = Mock(MemoryRepo)
         self._cache = MemoryCache()
         self._now_you_rest = App(
-            self._mock_repo,
             api_config_mock,
+            repo=self._mock_repo,
             cache=self._cache,
         )
 

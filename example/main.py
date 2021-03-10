@@ -16,13 +16,12 @@ if __name__ == '__main__':
             "$schema": "http://json-schema.org/draft-07/schema#",
             "properties": {
                 "name": {"type": "string"},
-                "color": {"type": "string"},
             },
-            "required": ["name", "color"],
+            "required": ["name"],
         }
     }
 
-    nyrApp = App(repo, api_config, cache=cache)
+    nyrApp = App(api_config, repo=repo, cache=cache)
 
     @nyrApp.app.listener('before_server_start')
     def init(app, loop):

@@ -8,6 +8,7 @@ from sanic_openapi import doc, swagger_blueprint
 
 from now_you_rest import NyrApplicationError
 from now_you_rest.caches.dummy import DummyCache
+from now_you_rest.repos.memory import MemoryRepo
 from now_you_rest.utils.dictionary import merge
 from now_you_rest.utils.json import JSONEncoder
 from now_you_rest.utils.request import get_query_string_arg
@@ -20,8 +21,8 @@ class App():
 
     def __init__(
         self,
-        repo,
         api_config,
+        repo=MemoryRepo(),
         cache=DummyCache(),
         cache_list_seconds_ttl=10,
         cache_get_seconds_ttl=60 * 30,  # thirty minutes

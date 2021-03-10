@@ -14,46 +14,30 @@ It is builded using Sanic, and it has a repository to Mongo DB and integrations 
 ```python
 #main.py
 
-from motor.motor_asyncio import AsyncIOMotorClient
-
 from now_you_rest.server import App
-from now_you_rest.repos.mongo import MongoRepo
 
 
-if __name__ == '__main__':
-    repo = MongoRepo()
-    nyrApp = App(repo, "./api.yaml")
+config = {
+    "name": "Mock",
+    "slug": "mock",
+    "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "integer"},
+        },
+        "required": ["name"],
+    }
+}
 
-    @nyrApp.app.listener('before_server_start')
-    def init(app, loop):
-        mongo_db_instance = AsyncIOMotorClient("mongodb://localhost:27017")
-        db = mongo_db_instance.get_default_database()
-        collection = db["default"]
-        repo.set_db_collection(collection)
+nyrApp = App(config)
 
-    nyrApp.app.run(
-        host='0.0.0.0',
-        port=8000,
-        debug=True,
-        auto_reload=True,
-    )
-```
-
-```yaml
-name: Example REST API
-slug: example-api
-db:
-  type: mongo
-schema:
-  properties:
-    name:
-      type: string
-    color:
-      type: string
-  required:
-    - name
-    - color
-
+nyrApp.app.run(
+    host='0.0.0.0',
+    port=8000,
+    debug=True,
+    auto_reload=True,
+)
 ```
 
 
