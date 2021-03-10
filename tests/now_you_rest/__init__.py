@@ -5,6 +5,20 @@ from now_you_rest.repos import Repo
 from now_you_rest.caches.memory import MemoryCache
 
 
+api_config_mock = {
+    "name": "Mock",
+    "slug": "mock",
+    "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "integer"},
+        },
+        "required": ["name"],
+    }
+}
+
+
 class MockRepo(Repo):
 
     async def get(self, id):
@@ -30,7 +44,7 @@ class BaseSanicTestCase(AsyncTestCase):
         self._cache = MemoryCache()
         self._now_you_rest = App(
             self._mock_repo,
-            "./tests/now_you_rest/api-mock.yaml",
+            api_config_mock,
             cache=self._cache,
         )
 

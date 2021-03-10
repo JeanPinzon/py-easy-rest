@@ -9,10 +9,23 @@ if __name__ == '__main__':
     repo = MongoRepo()
     cache = RedisCache("redis://localhost")
 
-    nyrApp = App(repo, "./example/api.yaml", cache=cache)
+    api_config = {
+        "name": "Example REST API",
+        "slug": "example-api",
+        "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "properties": {
+                "name": {"type": "string"},
+                "color": {"type": "string"},
+            },
+            "required": ["name", "color"],
+        }
+    }
+
+    nyrApp = App(repo, api_config, cache=cache)
 
     @nyrApp.app.listener('before_server_start')
-    def init(nyr, loop):
+    def init(app, loop):
         mongo_db_instance = AsyncIOMotorClient("mongodb://localhost:27017/db")
         db = mongo_db_instance.get_default_database()
         collection = db["default"]

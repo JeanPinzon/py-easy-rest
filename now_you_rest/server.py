@@ -11,7 +11,6 @@ from now_you_rest.caches.dummy import DummyCache
 from now_you_rest.utils.dictionary import merge
 from now_you_rest.utils.json import JSONEncoder
 from now_you_rest.utils.request import get_query_string_arg
-from now_you_rest.utils.yaml import read_api_params_from_yaml
 
 
 json_dumps = JSONEncoder().encode
@@ -22,25 +21,24 @@ class App():
     def __init__(
         self,
         repo,
-        api_config_path,
+        api_config,
         cache=DummyCache(),
         cache_list_seconds_ttl=10,
         cache_get_seconds_ttl=60 * 30,  # thirty minutes
     ):
         self._repo = repo
-        self._api_config_path = api_config_path
+        self._api_config = api_config
         self._cache = cache
         self._cache_list_seconds_ttl = cache_list_seconds_ttl
         self._cache_get_seconds_ttl = cache_get_seconds_ttl
 
-        self._api = read_api_params_from_yaml(api_config_path)
         self._schema = None
 
-        self.app = Sanic(self._api["slug"])
+        self.app = Sanic(self._api_config["slug"])
 
         self.app.blueprint(swagger_blueprint)
 
-        self.app.config["API_TITLE"] = self._api["name"]
+        self.app.config["API_TITLE"] = self._api_config["name"]
 
         self.app.error_handler.add(NyrApplicationError, App._handle_app_error)
 
@@ -49,7 +47,7 @@ class App():
     @property
     def api_schema(self):
         if self._schema is None:
-            self._schema = self._api["schema"]
+            self._schema = self._api_config["schema"]
             self._schema["additionalProperties"] = False
 
         return self._schema
@@ -73,8 +71,8 @@ class App():
         return None
 
     def _define_routes(self):
-        slug = self._api['slug']
-        name = self._api['name']
+        slug = self._api_config['slug']
+        name = self._api_config['name']
 
         @self.app.get(f"/{slug}/schema")
         @doc.summary("Get JSON Schema")
