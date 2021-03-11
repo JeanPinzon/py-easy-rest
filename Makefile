@@ -10,12 +10,6 @@ test:
 lint: 
 	flake8 --statistics
 
-run-mongo:
-	docker run -p 27017:27017 mongo
-
-run-example:
-	PYTHONPATH="." python example/main.py
-
 clean:
 	rm -rf cover
 	rm -rf dist
