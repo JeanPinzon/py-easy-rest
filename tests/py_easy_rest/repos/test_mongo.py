@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from bson.objectid import ObjectId
 
-from now_you_rest.repos.mongo import MongoRepo
+from py_easy_rest.repos.mongo import MongoRepo
 
 
 class MockMongoCursor():

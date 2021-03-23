@@ -2,10 +2,10 @@
 Module with cache providers to be used connected with api.
 """
 
-from now_you_rest import NyrApplicationError
+from py_easy_rest import PYRApplicationError
 
 
-class CacheError(NyrApplicationError):
+class CacheError(PYRApplicationError):
     """
     Error to raise in case of database errors.
     """

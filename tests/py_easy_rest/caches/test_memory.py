@@ -3,7 +3,7 @@ import pytest
 from aiounittest import AsyncTestCase
 from datetime import datetime, timedelta
 
-from now_you_rest.caches.memory import MemoryCache
+from py_easy_rest.caches.memory import MemoryCache
 
 
 class TestMemoryCache(AsyncTestCase):

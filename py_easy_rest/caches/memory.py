@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from now_you_rest.caches import Cache
+from py_easy_rest.caches import Cache
 
 
 class MemoryCache(Cache):

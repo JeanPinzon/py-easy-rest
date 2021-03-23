@@ -1,9 +1,9 @@
 import pytest
 import json
 
-from now_you_rest.repos import DatabaseError
+from py_easy_rest.repos import DatabaseError
 
-from tests.now_you_rest import BaseSanicTestCase
+from tests.py_easy_rest import BaseSanicTestCase
 
 
 class TestServer(BaseSanicTestCase):

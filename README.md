@@ -1,4 +1,4 @@
-# Now You REST
+# py-easy-rest
 
 It is a lib to create fast and scalable rest apis based on JSON schema in a very simple way. 
 It is based on Sanic and it has built in extensions to add repositories and caches.
@@ -8,7 +8,7 @@ It is based on Sanic and it has built in extensions to add repositories and cach
 
 ### How to install
 
-`pip install now-you-rest`
+`pip install py-easy-rest`
 
 
 ### Coding your app
@@ -20,7 +20,7 @@ It is based on Sanic and it has built in extensions to add repositories and cach
 ```python
 #main.py
 
-from now_you_rest.server import App
+from py_easy_rest.server import App
 
 
 config = {
@@ -36,9 +36,9 @@ config = {
     }
 }
 
-nyrApp = App(config)
+pyrApp = App(config)
 
-nyrApp.app.run(
+pyrApp.app.run(
     host='0.0.0.0',
     port=8000,
     debug=True,
@@ -60,11 +60,11 @@ Now you can access `http://localhost:8000/swagger` to access your api documentat
 It is possible to add a repository to your application persist data into some data base. 
 By default it will use a in memory repository, witch is not recommended to production environment.
 
-To create your own repository, you just need to implement our [Repo](https://gitlab.com/JeanPinzon/apify/-/blob/master/now_you_rest/repos/__init__.py#L16) and pass it to the App: 
+To create your own repository, you just need to implement our [Repo](https://gitlab.com/JeanPinzon/apify/-/blob/master/py_easy_rest/repos/__init__.py#L16) and pass it to the App: 
 
 
 ```python
-nyrApp = App(config, repo=MyOwnRepo())
+pyrApp = App(config, repo=MyOwnRepo())
 ```
 
 ### Mongo Repository
@@ -73,8 +73,8 @@ nyrApp = App(config, repo=MyOwnRepo())
 #main.py
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from now_you_rest.server import App
-from now_you_rest.repos.mongo import MongoRepo
+from py_easy_rest.server import App
+from py_easy_rest.repos.mongo import MongoRepo
 
 
 config = {
@@ -92,9 +92,9 @@ config = {
 
 repo = MongoRepo()
 
-nyrApp = App(config, repo=repo)
+pyrApp = App(config, repo=repo)
 
-@nyrApp.app.listener('before_server_start')
+@pyrApp.app.listener('before_server_start')
 def init(app, loop):
     mongo_db_instance = AsyncIOMotorClient("mongodb://localhost:27017/db")
     db = mongo_db_instance.get_default_database()
@@ -102,7 +102,7 @@ def init(app, loop):
     repo.set_db_collection(collection)
 
 
-nyrApp.app.run(
+pyrApp.app.run(
     host='0.0.0.0',
     port=8000,
     debug=True,
@@ -116,11 +116,11 @@ nyrApp.app.run(
 It is possible to add a cache to your application. 
 By default it will not use a cache, but you can choice a built in option or create your own cache.
 
-To create your own cache, you just need to implement our [Cache](https://gitlab.com/JeanPinzon/apify/-/blob/master/now_you_rest/caches/__init__.py#L16) and pass it to the App: 
+To create your own cache, you just need to implement our [Cache](https://gitlab.com/JeanPinzon/apify/-/blob/master/py_easy_rest/caches/__init__.py#L16) and pass it to the App: 
 
 
 ```python
-nyrApp = App(config, cache=MyOwnCache())
+pyrApp = App(config, cache=MyOwnCache())
 ```
 
 
@@ -128,8 +128,8 @@ nyrApp = App(config, cache=MyOwnCache())
 
 ```python
 #main.py
-from now_you_rest.server import App
-from now_you_rest.caches.redis import RedisCache
+from py_easy_rest.server import App
+from py_easy_rest.caches.redis import RedisCache
 
 
 config = {
@@ -147,9 +147,9 @@ config = {
 
 cache = RedisCache("redis://localhost")
 
-nyrApp = App(config, cache=cache)
+pyrApp = App(config, cache=cache)
 
-nyrApp.app.run(
+pyrApp.app.run(
     host='0.0.0.0',
     port=8000,
     debug=True,
@@ -162,8 +162,8 @@ nyrApp.app.run(
 
 ```python
 #main.py
-from now_you_rest.server import App
-from now_you_rest.caches.memory import MemoryCache
+from py_easy_rest.server import App
+from py_easy_rest.caches.memory import MemoryCache
 
 
 config = {
@@ -181,9 +181,9 @@ config = {
 
 cache = MemoryCache()
 
-nyrApp = App(config, cache=cache)
+pyrApp = App(config, cache=cache)
 
-nyrApp.app.run(
+pyrApp.app.run(
     host='0.0.0.0',
     port=8000,
     debug=True,
@@ -193,7 +193,7 @@ nyrApp.app.run(
 
 ### Middlewares and Listeners
 
-An instance of a `now_you_rest.server.App` has a property called `app` that is a Sanic app. You can use this property to add middlewares and listeners. 
+An instance of a `py_easy_rest.server.App` has a property called `app` that is a Sanic app. You can use this property to add middlewares and listeners. 
 Take a look at the docs: [Middlewares](https://sanicframework.org/guide/basics/middleware.html#attaching-middleware), 
 Take a look at the docs: [Listeners](https://sanicframework.org/guide/basics/listeners.html)
 

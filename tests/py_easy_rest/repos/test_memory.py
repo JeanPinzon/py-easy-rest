@@ -2,7 +2,7 @@ import pytest
 
 from aiounittest import AsyncTestCase
 
-from now_you_rest.repos.memory import MemoryRepo
+from py_easy_rest.repos.memory import MemoryRepo
 
 
 class TestMemoryRepo(AsyncTestCase):

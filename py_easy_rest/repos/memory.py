@@ -1,6 +1,6 @@
 from bson.objectid import ObjectId
 
-from now_you_rest.repos import Repo
+from py_easy_rest.repos import Repo
 
 
 class MemoryRepo(Repo):

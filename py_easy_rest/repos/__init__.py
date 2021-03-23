@@ -2,10 +2,10 @@
 Module with repositories to be used connected with api.
 """
 
-from now_you_rest import NyrApplicationError
+from py_easy_rest import PYRApplicationError
 
 
-class DatabaseError(NyrApplicationError):
+class DatabaseError(PYRApplicationError):
     """
     Error to raise in case of database errors.
     """

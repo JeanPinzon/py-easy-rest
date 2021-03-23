@@ -2,7 +2,7 @@ import pytest
 
 from aiounittest import AsyncTestCase
 
-from now_you_rest.caches.dummy import DummyCache
+from py_easy_rest.caches.dummy import DummyCache
 
 
 class TestDummyCache(AsyncTestCase):

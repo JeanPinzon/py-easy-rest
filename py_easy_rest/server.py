@@ -6,12 +6,12 @@ from sanic import Sanic, response
 from sanic.log import logger
 from sanic_openapi import doc, swagger_blueprint
 
-from now_you_rest import NyrApplicationError
-from now_you_rest.caches.dummy import DummyCache
-from now_you_rest.repos.memory import MemoryRepo
-from now_you_rest.utils.dictionary import merge
-from now_you_rest.utils.json import JSONEncoder
-from now_you_rest.utils.request import get_query_string_arg
+from py_easy_rest import PYRApplicationError
+from py_easy_rest.caches.dummy import DummyCache
+from py_easy_rest.repos.memory import MemoryRepo
+from py_easy_rest.utils.dictionary import merge
+from py_easy_rest.utils.json import JSONEncoder
+from py_easy_rest.utils.request import get_query_string_arg
 
 
 json_dumps = JSONEncoder().encode
@@ -41,7 +41,7 @@ class App():
 
         self.app.config["API_TITLE"] = self._api_config["name"]
 
-        self.app.error_handler.add(NyrApplicationError, App._handle_app_error)
+        self.app.error_handler.add(PYRApplicationError, App._handle_app_error)
 
         self._define_routes()
 

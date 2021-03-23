@@ -1,4 +1,4 @@
-class NyrApplicationError(Exception):
+class PYRApplicationError(Exception):
     """
     Error to raise in case of now you rest application errors.
     """

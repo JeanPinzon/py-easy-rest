@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from now_you_rest.utils.request import get_query_string_arg
+from py_easy_rest.utils.request import get_query_string_arg
 
 
 class TestRequestUtils(TestCase):

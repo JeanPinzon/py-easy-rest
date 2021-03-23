@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from bson.objectid import ObjectId
 
-from now_you_rest.utils.json import JSONEncoder
+from py_easy_rest.utils.json import JSONEncoder
 
 
 class TestJsonUtils(TestCase):

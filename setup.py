@@ -4,8 +4,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="now-you-rest",
-    version="0.0.10",
+    name="py-easy-rest",
+    version="0.1.0",
     author="Jean Pinzon",
     author_email="jean.pinzon1@gmail.com",
     description="The simplest way to have a rest api",
@@ -38,5 +38,5 @@ setuptools.setup(
             "aiounittest==1.4.0",
         ],
     },
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 )
