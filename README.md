@@ -1,3 +1,9 @@
+![Lint](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-lint.yml/badge.svg)
+![Build and Test](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-test.yml/badge.svg)
+![Upload Package](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-publish.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/JeanPinzon/py-easy-rest/badge.svg?branch=master)](https://coveralls.io/github/JeanPinzon/py-easy-rest?branch=master)
+[![PyPI version](https://badge.fury.io/py/py-easy-rest.svg)](https://badge.fury.io/py/py-easy-rest)
+
 # py-easy-rest
 
 It is a lib to create fast and scalable rest apis based on JSON schema in a very simple way. 
