@@ -36,6 +36,8 @@ setuptools.setup(
             "pytest-cov==2.10.1",
             "flake8==3.8.4",
             "aiounittest==1.4.0",
+            "twine==3.3.0",
+            "build==0.3.1.post1",
         ],
     },
     python_requires='>=3.8',
