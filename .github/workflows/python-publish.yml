@@ -19,6 +19,9 @@ jobs:
       with:
         python-version: '3.9'
     
+    - name: Install dependencies
+      run: make setup
+
     - name: Build
       run: make build
 
