@@ -1,4 +1,4 @@
-name: Test
+name: Lint
 
 on: [push]
 
@@ -20,6 +20,6 @@ jobs:
     - name: Install dependencies
       run: |
         make setup
-    - name: Test
+    - name: Lint
       run: |
-        make test
+        make lint
