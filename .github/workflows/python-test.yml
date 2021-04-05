@@ -23,3 +23,6 @@ jobs:
     - name: Test
       run: |
         make test
+    - name: Coveralls Python
+      uses: AndreMiras/coveralls-python-action@v20201129
+
