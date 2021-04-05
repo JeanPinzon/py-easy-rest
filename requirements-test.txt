@@ -1,8 +1,0 @@
-pytest==6.1.2
-pytest-asyncio==0.14.0
-pytest-cov==2.10.1
-flake8==3.8.4
-aiounittest==1.4.0
-ipdb==0.13.4
-twine==3.3.0
-build==0.3.1.post1
