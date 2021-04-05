@@ -18,6 +18,8 @@ clean:
 	find . -name '__pycache__' | xargs rm -Rf
 	find . -name '*.pyc' | xargs rm -Rf
 
-upload: clean
+build:
 	python -m build
+
+upload:
 	twine upload dist/*
