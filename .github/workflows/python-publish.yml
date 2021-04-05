@@ -28,4 +28,4 @@ jobs:
     - name: Publish
       uses: pypa/gh-action-pypi-publish@master
       with:
-        password: ${{ secrets.PYPI_PASSWORD }}
+        password: ${{ secrets.TWINE_PASSWORD }}
