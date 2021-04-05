@@ -60,7 +60,7 @@ Now you can access `http://localhost:8000/swagger` to access your api documentat
 It is possible to add a repository to your application persist data into some data base. 
 By default it will use a in memory repository, witch is not recommended to production environment.
 
-To create your own repository, you just need to implement our [Repo](/py_easy_rest/repos/__init__.py#L16) and pass it to the App: 
+To create your own repository, you just need to implement our [Repo](https://github.com/JeanPinzon/py-easy-rest/blob/master/py_easy_rest/repos/__init__.py#L16) and pass it to the App: 
 
 
 ```python
@@ -116,7 +116,7 @@ pyrApp.app.run(
 It is possible to add a cache to your application. 
 By default it will not use a cache, but you can choice a built in option or create your own cache.
 
-To create your own cache, you just need to implement our [Cache](/py_easy_rest/caches/__init__.py#L16) and pass it to the App: 
+To create your own cache, you just need to implement our [Cache](https://github.com/JeanPinzon/py-easy-rest/blob/master/py_easy_rest/caches/__init__.py#L16) and pass it to the App: 
 
 
 ```python
