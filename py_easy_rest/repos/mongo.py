@@ -21,7 +21,13 @@ class MongoRepo(Repo):
 
         cursor = self.collection.find().skip(page * size).limit(size)
 
-        return await cursor.to_list(length=size)
+        result = await cursor.to_list(length=size)
+
+        return {
+            "result": result,
+            "page": page,
+            "size": size,
+        }
 
     async def create(self, data, id=None):
         if id is not None:

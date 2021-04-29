@@ -77,9 +77,11 @@ class TestMongoRepo(AsyncTestCase):
 
         self._mongo_repo.set_db_collection(mocked_collection)
 
-        result = await self._mongo_repo.list(page=0, size=2)
+        response = await self._mongo_repo.list(page=0, size=2)
 
-        assert result == expected_documents
+        assert response["result"] == expected_documents
+        assert response["page"] == 0
+        assert response["size"] == 2
 
     @pytest.mark.asyncio
     async def test_should_list_paginate_correctly(self):

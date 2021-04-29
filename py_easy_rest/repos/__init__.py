@@ -28,7 +28,8 @@ class Repo():
 
     async def list(self, page=0, size=10):
         """
-        Receives <page> and <size> and return a list of dictionaries with the result.
+        Receives <page> and <size> and return a object with the result, page and size.
+        It's possible to put other properties in this result object too.
         If result is empty, return a empty list.
         """
         raise NotImplementedError

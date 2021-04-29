@@ -25,9 +25,11 @@ class TestMemoryRepo(AsyncTestCase):
             "id-2": {"name": "Alycio"},
         })
 
-        result = await repo.list(page=0, size=2)
+        response = await repo.list(page=0, size=2)
 
-        assert result == [
+        assert response["page"] == 0
+        assert response["size"] == 2
+        assert response["result"] == [
             {"name": "Jean"},
             {"name": "Alycio"},
         ]
@@ -41,35 +43,35 @@ class TestMemoryRepo(AsyncTestCase):
             "id-4": {"name": "Romario"},
         })
 
-        result = await repo.list(page=1, size=2)
+        response = await repo.list(page=1, size=2)
 
-        assert result == [
+        assert response["result"] == [
             {"name": "Ronaldo"},
             {"name": "Romario"},
         ]
 
-        result = await repo.list(page=0, size=2)
+        response = await repo.list(page=0, size=2)
 
-        assert result == [
+        assert response["result"] == [
             {"name": "Jean"},
             {"name": "Alycio"},
         ]
 
-        result = await repo.list(page=2, size=1)
+        response = await repo.list(page=2, size=1)
 
-        assert result == [
+        assert response["result"] == [
             {"name": "Ronaldo"},
         ]
 
-        result = await repo.list(page=1, size=3)
+        response = await repo.list(page=1, size=3)
 
-        assert result == [
+        assert response["result"] == [
             {"name": "Romario"},
         ]
 
-        result = await repo.list(page=2, size=2)
+        response = await repo.list(page=2, size=2)
 
-        assert result == []
+        assert response["result"] == []
 
     @pytest.mark.asyncio
     async def test_should_create_with_id_from_param_correctly(self):

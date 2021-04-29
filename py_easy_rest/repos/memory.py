@@ -18,14 +18,19 @@ class MemoryRepo(Repo):
 
     async def list(self, page, size):
         page = page or 0
-        size = size or len(self._sorted_data)
+        size = size or 10
 
         start = page * size
         stop = start + size
 
         result = self._sorted_data[start:stop]
 
-        return [self._data[id] for id in result]
+        return {
+            "result": [self._data[id] for id in result],
+            "page": page,
+            "size": size,
+            "totalCount": len(self._sorted_data)
+        }
 
     async def create(self, data, id=None):
         if id is None:
