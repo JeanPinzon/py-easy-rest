@@ -6,20 +6,20 @@ from py_easy_rest.repos import Repo
 class MongoRepo(Repo):
 
     def __init__(self):
-        self.collection = None
+        self.connection = None
 
-    def set_db_collection(self, collection):
-        self.collection = collection
+    def set_db_connection(self, connection):
+        self.connection = connection
 
-    async def get(self, id):
-        document = await self.collection.find_one({'_id': ObjectId(id)})
+    async def get(self, slug, id):
+        document = await self.connection[slug].find_one({'_id': ObjectId(id)})
         return document
 
-    async def list(self, page, size):
+    async def list(self, slug, page, size):
         page = page or 0
         size = size or 30
 
-        cursor = self.collection.find().skip(page * size).limit(size)
+        cursor = self.connection[slug].find().skip(page * size).limit(size)
 
         result = await cursor.to_list(length=size)
 
@@ -29,16 +29,16 @@ class MongoRepo(Repo):
             "size": size,
         }
 
-    async def create(self, data, id=None):
+    async def create(self, slug, data, id=None):
         if id is not None:
             data['_id'] = ObjectId(id)
 
-        result = await self.collection.insert_one(data)
+        result = await self.connection[slug].insert_one(data)
 
         return result.inserted_id
 
-    async def replace(self, id, data):
-        await self.collection.replace_one({'_id': ObjectId(id)}, data)
+    async def replace(self, slug, id, data):
+        await self.connection[slug].replace_one({'_id': ObjectId(id)}, data)
 
-    async def delete(self, id):
-        await self.collection.delete_one({'_id': ObjectId(id)})
+    async def delete(self, slug, id):
+        await self.connection[slug].delete_one({'_id': ObjectId(id)})

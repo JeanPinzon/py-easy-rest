@@ -53,7 +53,7 @@ class TestServer(BaseSanicTestCase):
 
         self._mock_repo.list.return_value = expected_list_of_resources
 
-        await self._cache.delete("list.page-None.size-None")
+        await self._cache.delete("mock.list.page-None.size-None")
 
         request, response = await self.request_api("/mock")
 
@@ -69,7 +69,7 @@ class TestServer(BaseSanicTestCase):
             {"name": "Alycio Neto"},
         ]
 
-        await self._cache.set("list.page-None.size-None", json.dumps(cached_list))
+        await self._cache.set("mock.list.page-None.size-None", json.dumps(cached_list))
 
         request, response = await self.request_api("/mock")
 
@@ -89,7 +89,7 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 200
         assert response.json() == expected_list_of_resources
 
-        self._mock_repo.list.assert_called_once_with(expected_page, expected_size)
+        self._mock_repo.list.assert_called_once_with("mock", expected_page, expected_size)
 
     @pytest.mark.asyncio
     async def test_should_get_with_id_returns_200_and_a_resource(self):
@@ -106,7 +106,7 @@ class TestServer(BaseSanicTestCase):
     async def test_should_get_with_id_returns_200_and_cached_resource(self):
         cached_resource = {"name": "Jean Pinzon"}
 
-        await self._cache.set("get.id-6", json.dumps(cached_resource))
+        await self._cache.set("mock.get.id-6", json.dumps(cached_resource))
 
         request, response = await self.request_api("/mock/6")
 
@@ -139,7 +139,7 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 201
         assert response.json() == {"id": expected_id}
 
-        self._mock_repo.create.assert_called_once_with(resource, None)
+        self._mock_repo.create.assert_called_once_with("mock", resource, None)
 
     @pytest.mark.asyncio
     async def test_should_post_returns_400_and_errors_when_data_is_not_valid(self):
@@ -175,7 +175,7 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 201
         assert response.json() == {"id": resource_id}
 
-        self._mock_repo.create.assert_called_once_with(resource, resource_id)
+        self._mock_repo.create.assert_called_once_with("mock", resource, resource_id)
 
     @pytest.mark.asyncio
     async def test_should_put_returns_200(self):
@@ -191,7 +191,7 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 200
         assert response.json() == {}
 
-        self._mock_repo.replace.assert_called_once_with(resource_id, resource)
+        self._mock_repo.replace.assert_called_once_with("mock", resource_id, resource)
 
     @pytest.mark.asyncio
     async def test_should_put_returns_404(self):
@@ -243,7 +243,7 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 200
         assert response.json() == {}
 
-        self._mock_repo.replace.assert_called_once_with(resource_id, resource)
+        self._mock_repo.replace.assert_called_once_with("mock", resource_id, resource)
 
     @pytest.mark.asyncio
     async def test_should_patch_returns_404(self):
@@ -293,7 +293,7 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 200
         assert response.json() == {}
 
-        self._mock_repo.delete.assert_called_once_with(resource_id)
+        self._mock_repo.delete.assert_called_once_with("mock", resource_id)
 
     @pytest.mark.asyncio
     async def test_should_delete_returns_404(self):
@@ -362,4 +362,4 @@ class TestServer(BaseSanicTestCase):
         assert response.status == 500
         assert response.json() == {"message": expected_error_message}
 
-        self._mock_repo.get.assert_called_once_with(resource_id)
+        self._mock_repo.get.assert_called_once_with("mock", resource_id)

@@ -72,7 +72,7 @@ class App():
         @doc.summary("Get JSON Schema")
         @doc.description("Route to get the api JSON Schema.")
         @doc.response(200, None, description="Success to get JSON Schema.")
-        async def get_schema(request):
+        async def _get_schema(request):
             return response.json(schema, dumps=json_dumps)
 
         @self.app.get(f"/{slug}")
@@ -96,7 +96,7 @@ class App():
             if size is not None:
                 size = int(size)
 
-            cache_key = f"list.page-{page}.size-{size}"
+            cache_key = f"{slug}.list.page-{page}.size-{size}"
 
             cached = await self._cache.get(cache_key)
 
@@ -107,7 +107,7 @@ class App():
 
             logger.info(f"Not found cache result with key {cache_key}")
 
-            result = await self._repo.list(page, size)
+            result = await self._repo.list(slug, page, size)
 
             await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_list_seconds_ttl)
 
@@ -130,10 +130,10 @@ class App():
             if errors:
                 return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-            resource_id = await self._repo.create(request.json, id)
+            resource_id = await self._repo.create(slug, request.json, id)
 
             if id:
-                cache_key = f"get.id-{id}"
+                cache_key = f"{slug}.get.id-{id}"
                 await self._cache.delete(cache_key)
 
             return response.json({"id": resource_id}, status=201, dumps=json_dumps)
@@ -146,7 +146,7 @@ class App():
         @doc.response(500, None, description="Internal server error.")
         @doc.produces(doc.Dictionary())
         async def _get(request, id):
-            cache_key = f"get.id-{id}"
+            cache_key = f"{slug}.get.id-{id}"
 
             cached = await self._cache.get(cache_key)
 
@@ -157,7 +157,7 @@ class App():
 
             logger.info(f"Not found cache result with key {cache_key}")
 
-            result = await self._repo.get(id)
+            result = await self._repo.get(slug, id)
 
             if result:
                 await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_get_seconds_ttl)
@@ -176,7 +176,7 @@ class App():
         @doc.response(500, None, description="Internal server error.")
         @doc.consumes(doc.JsonBody({}), location="body")
         async def _put(request, id):
-            existent_doc = await self._repo.get(id)
+            existent_doc = await self._repo.get(slug, id)
 
             if not existent_doc:
                 return response.json({}, status=404, dumps=json_dumps)
@@ -186,9 +186,9 @@ class App():
             if errors:
                 return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-            await self._repo.replace(id, request.json)
+            await self._repo.replace(slug, id, request.json)
 
-            cache_key = f"get.id-{id}"
+            cache_key = f"{slug}.get.id-{id}"
             await self._cache.delete(cache_key)
 
             return response.json({}, dumps=json_dumps)
@@ -204,7 +204,7 @@ class App():
         @doc.response(500, None, description="Internal server error.")
         @doc.consumes(doc.JsonBody({}), location="body")
         async def _patch(request, id):
-            existent_doc = await self._repo.get(id)
+            existent_doc = await self._repo.get(slug, id)
 
             if not existent_doc:
                 return response.json({}, status=404, dumps=json_dumps)
@@ -217,9 +217,9 @@ class App():
             if errors:
                 return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-            await self._repo.replace(id, doc)
+            await self._repo.replace(slug, id, doc)
 
-            cache_key = f"get.id-{id}"
+            cache_key = f"{slug}.get.id-{id}"
             await self._cache.delete(cache_key)
 
             return response.json({}, dumps=json_dumps)
@@ -230,14 +230,14 @@ class App():
         @doc.response(200, None, description="Success to delete the document.")
         @doc.response(500, None, description="Internal server error.")
         async def _delete(request, id):
-            existent_doc = await self._repo.get(id)
+            existent_doc = await self._repo.get(slug, id)
 
             if not existent_doc:
                 return response.json({}, status=404, dumps=json_dumps)
 
-            await self._repo.delete(id)
+            await self._repo.delete(slug, id)
 
-            cache_key = f"get.id-{id}"
+            cache_key = f"{slug}.get.id-{id}"
             await self._cache.delete(cache_key)
 
             return response.json({}, dumps=json_dumps)

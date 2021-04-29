@@ -54,12 +54,12 @@ class TestMongoRepo(AsyncTestCase):
         expected_id = "551137c2f9e1fac808a5f572"
         expected_document = {"_id": expected_id}
 
-        mocked_collection = Mock(MockMongoCollection)
-        mocked_collection.find_one.return_value = expected_document
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
+        mocked_connection["mock"].find_one.return_value = expected_document
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        result = await self._mongo_repo.get(expected_id)
+        result = await self._mongo_repo.get("mock", expected_id)
 
         assert result == expected_document
 
@@ -72,12 +72,12 @@ class TestMongoRepo(AsyncTestCase):
         mongo_cursor_mock.skip.return_value = mongo_cursor_mock
         mongo_cursor_mock.limit.return_value = mongo_cursor_mock
 
-        mocked_collection = Mock(MockMongoCollection)
-        mocked_collection.find.return_value = mongo_cursor_mock
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
+        mocked_connection["mock"].find.return_value = mongo_cursor_mock
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        response = await self._mongo_repo.list(page=0, size=2)
+        response = await self._mongo_repo.list("mock", page=0, size=2)
 
         assert response["result"] == expected_documents
         assert response["page"] == 0
@@ -92,12 +92,12 @@ class TestMongoRepo(AsyncTestCase):
         mongo_cursor_mock.skip.return_value = mongo_cursor_mock
         mongo_cursor_mock.limit.return_value = mongo_cursor_mock
 
-        mocked_collection = Mock(MockMongoCollection)
-        mocked_collection.find.return_value = mongo_cursor_mock
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
+        mocked_connection["mock"].find.return_value = mongo_cursor_mock
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        await self._mongo_repo.list(page=3, size=5)
+        await self._mongo_repo.list("mock", page=3, size=5)
 
         mongo_cursor_mock.to_list.assert_called_once_with(length=5)
         mongo_cursor_mock.skip.assert_called_once_with(15)
@@ -108,12 +108,12 @@ class TestMongoRepo(AsyncTestCase):
         mocked_id = "551137c2f9e1fac808a5f572"
         document_to_create = {"name": "Jean"}
 
-        mocked_collection = Mock(MockMongoCollection)
-        mocked_collection.insert_one.return_value = MockMongoInsertResult(mocked_id)
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
+        mocked_connection["mock"].insert_one.return_value = MockMongoInsertResult(mocked_id)
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        result = await self._mongo_repo.create(document_to_create)
+        result = await self._mongo_repo.create("mock", document_to_create)
 
         assert result == mocked_id
 
@@ -122,14 +122,14 @@ class TestMongoRepo(AsyncTestCase):
         mocked_id = "551137c2f9e1fac808a5f572"
         document_to_create = {"name": "Jean"}
 
-        mocked_collection = Mock(MockMongoCollection)
-        mocked_collection.insert_one.return_value = MockMongoInsertResult(mocked_id)
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
+        mocked_connection["mock"].insert_one.return_value = MockMongoInsertResult(mocked_id)
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        result = await self._mongo_repo.create(document_to_create, mocked_id)
+        result = await self._mongo_repo.create("mock", document_to_create, mocked_id)
 
-        mocked_collection.insert_one.assert_called_once_with(
+        mocked_connection["mock"].insert_one.assert_called_once_with(
             {"name": "Jean", "_id": ObjectId(mocked_id)}
         )
 
@@ -140,14 +140,14 @@ class TestMongoRepo(AsyncTestCase):
         mocked_id = "551137c2f9e1fac808a5f572"
         document_to_create = {"name": "Jean", "_id": mocked_id}
 
-        mocked_collection = Mock(MockMongoCollection)
-        mocked_collection.insert_one.return_value = MockMongoInsertResult(mocked_id)
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
+        mocked_connection["mock"].insert_one.return_value = MockMongoInsertResult(mocked_id)
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        result = await self._mongo_repo.create(document_to_create)
+        result = await self._mongo_repo.create("mock", document_to_create)
 
-        mocked_collection.insert_one.assert_called_once_with(document_to_create)
+        mocked_connection["mock"].insert_one.assert_called_once_with(document_to_create)
 
         assert result == mocked_id
 
@@ -156,13 +156,13 @@ class TestMongoRepo(AsyncTestCase):
         mocked_id = "551137c2f9e1fac808a5f572"
         document_to_replace = {"name": "Jean"}
 
-        mocked_collection = Mock(MockMongoCollection)
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        await self._mongo_repo.replace(mocked_id, document_to_replace)
+        await self._mongo_repo.replace("mock", mocked_id, document_to_replace)
 
-        mocked_collection.replace_one.assert_called_once_with(
+        mocked_connection["mock"].replace_one.assert_called_once_with(
             {'_id': ObjectId(mocked_id)},
             document_to_replace,
         )
@@ -171,12 +171,12 @@ class TestMongoRepo(AsyncTestCase):
     async def test_should_delete_document_correctly(self):
         mocked_id = "551137c2f9e1fac808a5f572"
 
-        mocked_collection = Mock(MockMongoCollection)
+        mocked_connection = {"mock": Mock(MockMongoCollection)}
 
-        self._mongo_repo.set_db_collection(mocked_collection)
+        self._mongo_repo.set_db_connection(mocked_connection)
 
-        await self._mongo_repo.delete(mocked_id)
+        await self._mongo_repo.delete("mock", mocked_id)
 
-        mocked_collection.delete_one.assert_called_once_with(
+        mocked_connection["mock"].delete_one.assert_called_once_with(
             {'_id': ObjectId(mocked_id)}
         )
