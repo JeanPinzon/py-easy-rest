@@ -14,19 +14,33 @@ class TestServer(BaseSanicTestCase):
 
         assert response.status == 404
 
+
     @pytest.mark.asyncio
     async def test_should_get_schema_returns_200(self):
         expected_schema = {
-            "$schema": "http://json-schema.org/draft-07/schema#",
+            "name": "Mock",
+            "slug": "mock",
             "properties": {
                 "name": {"type": "string"},
                 "age": {"type": "integer"},
             },
             "required": ["name"],
-            "additionalProperties": False,
         }
 
         request, response = await self.request_api("/mock/schema")
+
+        assert response.status == 200
+        assert response.json() == expected_schema
+
+    @pytest.mark.asyncio
+    async def test_should_works_with_multiple_schemas_correctly(self):
+        expected_schema = {
+            "name": "Second api",
+            "slug": "second",
+            "properties": {"name": {"type": "string"}},
+        }
+
+        request, response = await self.request_api("/second/schema")
 
         assert response.status == 200
         assert response.json() == expected_schema

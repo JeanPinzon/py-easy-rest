@@ -30,16 +30,16 @@ from py_easy_rest.server import App
 
 
 config = {
-    "name": "Mock",
-    "slug": "mock",
-    "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
+    "name": "Project Name",
+    "schemas": [{
+        "name": "Mock",
+        "slug": "mock",
         "properties": {
             "name": {"type": "string"},
             "age": {"type": "integer"},
         },
         "required": ["name"],
-    }
+    }]
 }
 
 pyrApp = App(config)
@@ -84,16 +84,16 @@ from py_easy_rest.repos.mongo import MongoRepo
 
 
 config = {
-    "name": "Mock",
-    "slug": "mock",
-    "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
+    "name": "Project Name",
+    "schemas": [{
+        "name": "Mock",
+        "slug": "mock",
         "properties": {
             "name": {"type": "string"},
             "age": {"type": "integer"},
         },
         "required": ["name"],
-    }
+    }]
 }
 
 repo = MongoRepo()
@@ -139,16 +139,16 @@ from py_easy_rest.caches.redis import RedisCache
 
 
 config = {
-    "name": "Mock",
-    "slug": "mock",
-    "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
+    "name": "Project Name",
+    "schemas": [{
+        "name": "Mock",
+        "slug": "mock",
         "properties": {
             "name": {"type": "string"},
             "age": {"type": "integer"},
         },
         "required": ["name"],
-    }
+    }]
 }
 
 cache = RedisCache("redis://localhost")
@@ -173,16 +173,16 @@ from py_easy_rest.caches.memory import MemoryCache
 
 
 config = {
-    "name": "Mock",
-    "slug": "mock",
-    "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
+    "name": "Project Name",
+    "schemas": [{
+        "name": "Mock",
+        "slug": "mock",
         "properties": {
             "name": {"type": "string"},
             "age": {"type": "integer"},
         },
         "required": ["name"],
-    }
+    }]
 }
 
 cache = MemoryCache()

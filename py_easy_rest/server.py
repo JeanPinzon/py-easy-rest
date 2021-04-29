@@ -33,9 +33,9 @@ class App():
         self._cache_list_seconds_ttl = cache_list_seconds_ttl
         self._cache_get_seconds_ttl = cache_get_seconds_ttl
 
-        self._schema = None
+        self._schemas = self._api_config["schemas"]
 
-        self.app = Sanic(self._api_config["slug"])
+        self.app = Sanic(self._api_config["name"])
 
         self.app.blueprint(swagger_blueprint)
 
@@ -43,23 +43,17 @@ class App():
 
         self.app.error_handler.add(PYRApplicationError, App._handle_app_error)
 
-        self._define_routes()
+        for schema in self._schemas:
+            self._define_routes(schema)
 
-    @property
-    def api_schema(self):
-        if self._schema is None:
-            self._schema = self._api_config["schema"]
-            self._schema["additionalProperties"] = False
-
-        return self._schema
 
     @staticmethod
     async def _handle_app_error(request, exception):
         logger.exception(f"Failed to handle request {exception}")
         return response.json({"message": exception.user_message}, status=500, dumps=json_dumps)
 
-    def _validate(self, resource):
-        validator = Draft7Validator(self.api_schema)
+    def _validate(self, resource, schema):
+        validator = Draft7Validator(schema)
 
         errors = []
 
@@ -71,16 +65,16 @@ class App():
 
         return None
 
-    def _define_routes(self):
-        slug = self._api_config['slug']
-        name = self._api_config['name']
+    def _define_routes(self, schema):
+        slug = schema['slug']
+        name = schema['name']
 
         @self.app.get(f"/{slug}/schema")
         @doc.summary("Get JSON Schema")
         @doc.description("Route to get the api JSON Schema.")
         @doc.response(200, None, description="Success to get JSON Schema.")
         async def get_schema(request):
-            return response.json(self.api_schema, dumps=json_dumps)
+            return response.json(schema, dumps=json_dumps)
 
         @self.app.get(f"/{slug}")
         @doc.summary(f"List {name}")
@@ -132,7 +126,7 @@ class App():
         @doc.response(500, None, description="Internal server error.")
         @doc.consumes(doc.JsonBody({}), location="body")
         async def _post(request, id=None):
-            errors = self._validate(request.json)
+            errors = self._validate(request.json, schema)
 
             if errors:
                 return response.json({"errors": errors}, status=400, dumps=json_dumps)
@@ -188,7 +182,7 @@ class App():
             if not existent_doc:
                 return response.json({}, status=404, dumps=json_dumps)
 
-            errors = self._validate(request.json)
+            errors = self._validate(request.json, schema)
 
             if errors:
                 return response.json({"errors": errors}, status=400, dumps=json_dumps)
@@ -219,7 +213,7 @@ class App():
             doc = merge(request.json, existent_doc)
             doc.pop("_id", None)
 
-            errors = self._validate(doc)
+            errors = self._validate(doc, schema)
 
             if errors:
                 return response.json({"errors": errors}, status=400, dumps=json_dumps)

@@ -6,16 +6,20 @@ from py_easy_rest.caches.memory import MemoryCache
 
 
 api_config_mock = {
-    "name": "Mock",
-    "slug": "mock",
-    "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
+    "name": "Project Name",
+    "schemas": [{
+        "name": "Mock",
+        "slug": "mock",
         "properties": {
             "name": {"type": "string"},
             "age": {"type": "integer"},
         },
         "required": ["name"],
-    }
+    }, {
+        "name": "Second api",
+        "slug": "second",
+        "properties": {"name": {"type": "string"}},
+    }]
 }
 
 
