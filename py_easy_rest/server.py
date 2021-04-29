@@ -46,7 +46,6 @@ class App():
         for schema in self._schemas:
             self._define_routes(schema)
 
-
     @staticmethod
     async def _handle_app_error(request, exception):
         logger.exception(f"Failed to handle request {exception}")

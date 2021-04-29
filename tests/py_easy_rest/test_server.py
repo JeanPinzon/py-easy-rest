@@ -14,7 +14,6 @@ class TestServer(BaseSanicTestCase):
 
         assert response.status == 404
 
-
     @pytest.mark.asyncio
     async def test_should_get_schema_returns_200(self):
         expected_schema = {
