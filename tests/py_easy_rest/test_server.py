@@ -37,6 +37,7 @@ class TestServer(BaseSanicTestCase):
             "name": "Second api",
             "slug": "second",
             "properties": {"name": {"type": "string"}},
+            "enabled_handlers": ["get"]
         }
 
         request, response = await self.request_api("/second/schema")
@@ -363,3 +364,9 @@ class TestServer(BaseSanicTestCase):
         assert response.json() == {"message": expected_error_message}
 
         self._mock_repo.get.assert_called_once_with("mock", resource_id)
+
+    @pytest.mark.asyncio
+    async def test_should_disabled_handlers_return_405(self):
+        request, response = await self.request_api("/second/1", method="DELETE")
+
+        assert response.status == 405

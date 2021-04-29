@@ -67,6 +67,14 @@ class App():
     def _define_routes(self, schema):
         slug = schema['slug']
         name = schema['name']
+        enabled_handlers = schema.get('enabled_handlers', [
+            "list",
+            "create",
+            "get",
+            "replace",
+            "partial_update",
+            "delete",
+        ])
 
         @self.app.get(f"/{slug}/schema")
         @doc.summary("Get JSON Schema")
@@ -75,169 +83,175 @@ class App():
         async def _get_schema(request):
             return response.json(schema, dumps=json_dumps)
 
-        @self.app.get(f"/{slug}")
-        @doc.summary(f"List {name}")
-        @doc.description(
-            f"Route to list all {name}. "
-            "You can use the parameters page and size. Default values: page=0, size=30."
-        )
-        @doc.response(200, None, description=f"Success to list {name}.")
-        @doc.response(500, None, description="Internal server error.")
-        @doc.consumes(doc.Integer(name="page"), location="query")
-        @doc.consumes(doc.Integer(name="size"), location="query")
-        @doc.produces(doc.List(doc.Dictionary()))
-        async def _list(request):
-            page = get_query_string_arg(request.args, "page")
-            size = get_query_string_arg(request.args, "size")
+        if "list" in enabled_handlers:
+            @self.app.get(f"/{slug}")
+            @doc.summary(f"List {name}")
+            @doc.description(
+                f"Route to list all {name}. "
+                "You can use the parameters page and size. Default values: page=0, size=30."
+            )
+            @doc.response(200, None, description=f"Success to list {name}.")
+            @doc.response(500, None, description="Internal server error.")
+            @doc.consumes(doc.Integer(name="page"), location="query")
+            @doc.consumes(doc.Integer(name="size"), location="query")
+            @doc.produces(doc.List(doc.Dictionary()))
+            async def _list(request):
+                page = get_query_string_arg(request.args, "page")
+                size = get_query_string_arg(request.args, "size")
 
-            if page is not None:
-                page = int(page)
+                if page is not None:
+                    page = int(page)
 
-            if size is not None:
-                size = int(size)
+                if size is not None:
+                    size = int(size)
 
-            cache_key = f"{slug}.list.page-{page}.size-{size}"
+                cache_key = f"{slug}.list.page-{page}.size-{size}"
 
-            cached = await self._cache.get(cache_key)
+                cached = await self._cache.get(cache_key)
 
-            if cached is not None:
-                logger.info(f"Found cache result with key {cache_key}")
-                result = json.loads(cached)
+                if cached is not None:
+                    logger.info(f"Found cache result with key {cache_key}")
+                    result = json.loads(cached)
+                    return response.json(result, dumps=json_dumps)
+
+                logger.info(f"Not found cache result with key {cache_key}")
+
+                result = await self._repo.list(slug, page, size)
+
+                await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_list_seconds_ttl)
+
                 return response.json(result, dumps=json_dumps)
 
-            logger.info(f"Not found cache result with key {cache_key}")
+        if "create" in enabled_handlers:
+            @self.app.post(f"/{slug}")
+            @self.app.post(f"/{slug}/<id>")
+            @doc.summary(f"Create a new {name}")
+            @doc.description(
+                f"Route to create a new document of {name}. "
+                "Take a look at the schema route to know what properties you must send."
+            )
+            @doc.response(201, None, description=f"Success to create a new {name} document.")
+            @doc.response(400, None, description="Validation error.")
+            @doc.response(500, None, description="Internal server error.")
+            @doc.consumes(doc.JsonBody({}), location="body")
+            async def _post(request, id=None):
+                errors = self._validate(request.json, schema)
 
-            result = await self._repo.list(slug, page, size)
+                if errors:
+                    return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-            await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_list_seconds_ttl)
+                resource_id = await self._repo.create(slug, request.json, id)
 
-            return response.json(result, dumps=json_dumps)
+                if id:
+                    cache_key = f"{slug}.get.id-{id}"
+                    await self._cache.delete(cache_key)
 
-        @self.app.post(f"/{slug}")
-        @self.app.post(f"/{slug}/<id>")
-        @doc.summary(f"Create a new {name}")
-        @doc.description(
-            f"Route to create a new document of {name}. "
-            "Take a look at the schema route to know what properties you must send."
-        )
-        @doc.response(201, None, description=f"Success to create a new {name} document.")
-        @doc.response(400, None, description="Validation error.")
-        @doc.response(500, None, description="Internal server error.")
-        @doc.consumes(doc.JsonBody({}), location="body")
-        async def _post(request, id=None):
-            errors = self._validate(request.json, schema)
+                return response.json({"id": resource_id}, status=201, dumps=json_dumps)
 
-            if errors:
-                return response.json({"errors": errors}, status=400, dumps=json_dumps)
+        if "get" in enabled_handlers:
+            @self.app.get(f"/{slug}/<id>")
+            @doc.summary("Get a document by id")
+            @doc.description(f"Route to get a {name} document by id.")
+            @doc.response(200, None, description="Success to get the document.")
+            @doc.response(404, None, description="Document not found.")
+            @doc.response(500, None, description="Internal server error.")
+            @doc.produces(doc.Dictionary())
+            async def _get(request, id):
+                cache_key = f"{slug}.get.id-{id}"
 
-            resource_id = await self._repo.create(slug, request.json, id)
+                cached = await self._cache.get(cache_key)
 
-            if id:
+                if cached is not None:
+                    logger.info(f"Found cache result with key {cache_key}")
+                    result = json.loads(cached)
+                    return response.json(result, dumps=json_dumps)
+
+                logger.info(f"Not found cache result with key {cache_key}")
+
+                result = await self._repo.get(slug, id)
+
+                if result:
+                    await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_get_seconds_ttl)
+                    return response.json(result, dumps=json_dumps)
+
+                return response.json({}, status=404, dumps=json_dumps)
+
+        if "replace" in enabled_handlers:
+            @self.app.put(f"/{slug}/<id>")
+            @doc.summary("Replace a document by id")
+            @doc.description(
+                f"Route to replace a document of {name}. "
+                "Take a look at the schema route to know what properties you must send."
+            )
+            @doc.response(200, None, description="Success to replace the document.")
+            @doc.response(400, None, description="Validation error.")
+            @doc.response(500, None, description="Internal server error.")
+            @doc.consumes(doc.JsonBody({}), location="body")
+            async def _put(request, id):
+                existent_doc = await self._repo.get(slug, id)
+
+                if not existent_doc:
+                    return response.json({}, status=404, dumps=json_dumps)
+
+                errors = self._validate(request.json, schema)
+
+                if errors:
+                    return response.json({"errors": errors}, status=400, dumps=json_dumps)
+
+                await self._repo.replace(slug, id, request.json)
+
                 cache_key = f"{slug}.get.id-{id}"
                 await self._cache.delete(cache_key)
 
-            return response.json({"id": resource_id}, status=201, dumps=json_dumps)
+                return response.json({}, dumps=json_dumps)
 
-        @self.app.get(f"/{slug}/<id>")
-        @doc.summary("Get a document by id")
-        @doc.description(f"Route to get a {name} document by id.")
-        @doc.response(200, None, description="Success to get the document.")
-        @doc.response(404, None, description="Document not found.")
-        @doc.response(500, None, description="Internal server error.")
-        @doc.produces(doc.Dictionary())
-        async def _get(request, id):
-            cache_key = f"{slug}.get.id-{id}"
+        if "partial_update" in enabled_handlers:
+            @self.app.patch(f"/{slug}/<id>")
+            @doc.summary("Partial update a document by id")
+            @doc.description(
+                f"Route to partial update a document of {name}. "
+                "Take a look at the schema route to know what properties you must send."
+            )
+            @doc.response(200, None, description="Success to partial update the document.")
+            @doc.response(400, None, description="Validation error.")
+            @doc.response(500, None, description="Internal server error.")
+            @doc.consumes(doc.JsonBody({}), location="body")
+            async def _patch(request, id):
+                existent_doc = await self._repo.get(slug, id)
 
-            cached = await self._cache.get(cache_key)
+                if not existent_doc:
+                    return response.json({}, status=404, dumps=json_dumps)
 
-            if cached is not None:
-                logger.info(f"Found cache result with key {cache_key}")
-                result = json.loads(cached)
-                return response.json(result, dumps=json_dumps)
+                doc = merge(request.json, existent_doc)
+                doc.pop("_id", None)
 
-            logger.info(f"Not found cache result with key {cache_key}")
+                errors = self._validate(doc, schema)
 
-            result = await self._repo.get(slug, id)
+                if errors:
+                    return response.json({"errors": errors}, status=400, dumps=json_dumps)
 
-            if result:
-                await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_get_seconds_ttl)
-                return response.json(result, dumps=json_dumps)
+                await self._repo.replace(slug, id, doc)
 
-            return response.json({}, status=404, dumps=json_dumps)
+                cache_key = f"{slug}.get.id-{id}"
+                await self._cache.delete(cache_key)
 
-        @self.app.put(f"/{slug}/<id>")
-        @doc.summary("Replace a document by id")
-        @doc.description(
-            f"Route to replace a document of {name}. "
-            "Take a look at the schema route to know what properties you must send."
-        )
-        @doc.response(200, None, description="Success to replace the document.")
-        @doc.response(400, None, description="Validation error.")
-        @doc.response(500, None, description="Internal server error.")
-        @doc.consumes(doc.JsonBody({}), location="body")
-        async def _put(request, id):
-            existent_doc = await self._repo.get(slug, id)
+                return response.json({}, dumps=json_dumps)
 
-            if not existent_doc:
-                return response.json({}, status=404, dumps=json_dumps)
+        if "delete" in enabled_handlers:
+            @self.app.delete(f"/{slug}/<id>")
+            @doc.summary("Delere a document by id")
+            @doc.description(f"Route to delete a document of {name}.")
+            @doc.response(200, None, description="Success to delete the document.")
+            @doc.response(500, None, description="Internal server error.")
+            async def _delete(request, id):
+                existent_doc = await self._repo.get(slug, id)
 
-            errors = self._validate(request.json, schema)
+                if not existent_doc:
+                    return response.json({}, status=404, dumps=json_dumps)
 
-            if errors:
-                return response.json({"errors": errors}, status=400, dumps=json_dumps)
+                await self._repo.delete(slug, id)
 
-            await self._repo.replace(slug, id, request.json)
+                cache_key = f"{slug}.get.id-{id}"
+                await self._cache.delete(cache_key)
 
-            cache_key = f"{slug}.get.id-{id}"
-            await self._cache.delete(cache_key)
-
-            return response.json({}, dumps=json_dumps)
-
-        @self.app.patch(f"/{slug}/<id>")
-        @doc.summary("Partial update a document by id")
-        @doc.description(
-            f"Route to partial update a document of {name}. "
-            "Take a look at the schema route to know what properties you must send."
-        )
-        @doc.response(200, None, description="Success to partial update the document.")
-        @doc.response(400, None, description="Validation error.")
-        @doc.response(500, None, description="Internal server error.")
-        @doc.consumes(doc.JsonBody({}), location="body")
-        async def _patch(request, id):
-            existent_doc = await self._repo.get(slug, id)
-
-            if not existent_doc:
-                return response.json({}, status=404, dumps=json_dumps)
-
-            doc = merge(request.json, existent_doc)
-            doc.pop("_id", None)
-
-            errors = self._validate(doc, schema)
-
-            if errors:
-                return response.json({"errors": errors}, status=400, dumps=json_dumps)
-
-            await self._repo.replace(slug, id, doc)
-
-            cache_key = f"{slug}.get.id-{id}"
-            await self._cache.delete(cache_key)
-
-            return response.json({}, dumps=json_dumps)
-
-        @self.app.delete(f"/{slug}/<id>")
-        @doc.summary("Delere a document by id")
-        @doc.description(f"Route to delete a document of {name}.")
-        @doc.response(200, None, description="Success to delete the document.")
-        @doc.response(500, None, description="Internal server error.")
-        async def _delete(request, id):
-            existent_doc = await self._repo.get(slug, id)
-
-            if not existent_doc:
-                return response.json({}, status=404, dumps=json_dumps)
-
-            await self._repo.delete(slug, id)
-
-            cache_key = f"{slug}.get.id-{id}"
-            await self._cache.delete(cache_key)
-
-            return response.json({}, dumps=json_dumps)
+                return response.json({}, dumps=json_dumps)

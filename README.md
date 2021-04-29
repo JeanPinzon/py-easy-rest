@@ -203,3 +203,15 @@ An instance of a `py_easy_rest.server.App` has a property called `app` that is a
 Take a look at the docs: [Middlewares](https://sanicframework.org/guide/basics/middleware.html#attaching-middleware), 
 Take a look at the docs: [Listeners](https://sanicframework.org/guide/basics/listeners.html)
 
+
+### API Description
+
+Properties you could pass to py_easy_rest.server.App:
+
+| Properties             | Required | Default      | Description                              |
+|------------------------|----------|--------------|------------------------------------------|
+| api_config             | True     | None         | Object with project and schemas config   |
+| repo                   | False    | MemoryRepo() | Repository used as data resource         |
+| cache                  | False    | DummyCache() | Cache strategy                           |
+| cache_list_seconds_ttl | False    | 10           | TTL to cache the list results in seconds |
+| cache_get_seconds_ttl  | False    | 60 * 30      | TTL to cache the get results             |

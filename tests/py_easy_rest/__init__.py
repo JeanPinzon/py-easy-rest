@@ -19,6 +19,7 @@ api_config_mock = {
         "name": "Second api",
         "slug": "second",
         "properties": {"name": {"type": "string"}},
+        "enabled_handlers": ["get"]
     }]
 }
 
