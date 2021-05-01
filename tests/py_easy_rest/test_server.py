@@ -79,7 +79,7 @@ class TestServer(BaseSanicTestCase):
 
     @pytest.mark.asyncio
     async def test_should_get_without_id_pass_pagination_params_to_repo_when_receives_it_as_query_string(self):
-        expected_page = 10
+        expected_page = 30
         expected_size = 20
         expected_list_of_resources = []
 

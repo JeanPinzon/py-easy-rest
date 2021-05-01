@@ -26,7 +26,7 @@ class Repo():
         """
         raise NotImplementedError
 
-    async def list(self, slug, page=0, size=10):
+    async def list(self, slug, page=0, size=30):
         """
         Receives <slug>, <page> and <size> and return a object with the result, page and size.
         It's possible to put other properties in this result object too.

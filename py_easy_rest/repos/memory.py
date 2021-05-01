@@ -22,7 +22,7 @@ class MemoryRepo(Repo):
     async def list(self, slug, page, size):
         self._ensure_slug_exists(slug)
         page = page or 0
-        size = size or 10
+        size = size or 30
 
         start = page * size
         stop = start + size
