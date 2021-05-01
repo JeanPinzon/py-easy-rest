@@ -40,6 +40,7 @@ class App():
         self.app.blueprint(swagger_blueprint)
 
         self.app.config["API_TITLE"] = self._api_config["name"]
+        self.app.config["API_SCHEMES"] = ["https", "http"]
 
         self.app.error_handler.add(PYRApplicationError, App._handle_app_error)
 
