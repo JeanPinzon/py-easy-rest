@@ -2,7 +2,7 @@ from unittest.mock import Mock
 from aiounittest import AsyncTestCase
 from py_easy_rest.server import App
 from py_easy_rest.repos.memory import MemoryRepo
-from py_easy_rest.caches.memory import MemoryCache
+from py_easy_rest.caches.dummy import DummyCache
 
 
 api_config_mock = {
@@ -28,7 +28,10 @@ class BaseSanicTestCase(AsyncTestCase):
 
     def setUp(self):
         self._mock_repo = Mock(MemoryRepo)
-        self._cache = MemoryCache()
+        self._cache = Mock(DummyCache)
+
+        self._cache.get.return_value = None
+
         self._py_easy_rest = App(
             api_config_mock,
             repo=self._mock_repo,

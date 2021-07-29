@@ -163,40 +163,6 @@ pyrApp.app.run(
 )
 ```
 
-
-### Memory cache
-
-```python
-#main.py
-from py_easy_rest.server import App
-from py_easy_rest.caches.memory import MemoryCache
-
-
-config = {
-    "name": "Project Name",
-    "schemas": [{
-        "name": "Mock",
-        "slug": "mock",
-        "properties": {
-            "name": {"type": "string"},
-            "age": {"type": "integer"},
-        },
-        "required": ["name"],
-    }]
-}
-
-cache = MemoryCache()
-
-pyrApp = App(config, cache=cache)
-
-pyrApp.app.run(
-    host='0.0.0.0',
-    port=8000,
-    debug=True,
-    auto_reload=True,
-)
-```
-
 ### Middlewares and Listeners
 
 An instance of a `py_easy_rest.server.App` has a property called `app` that is a Sanic app. You can use this property to add middlewares and listeners. 

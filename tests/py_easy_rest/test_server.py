@@ -54,8 +54,6 @@ class TestServer(BaseSanicTestCase):
 
         self._mock_repo.list.return_value = expected_list_of_resources
 
-        await self._cache.delete("mock.list.page-None.size-None")
-
         request, response = await self.request_api("/mock")
 
         assert response.status == 200
@@ -70,12 +68,14 @@ class TestServer(BaseSanicTestCase):
             {"name": "Alycio Neto"},
         ]
 
-        await self._cache.set("mock.list.page-None.size-None", json.dumps(cached_list))
+        self._cache.get.return_value = json.dumps(cached_list)
 
         request, response = await self.request_api("/mock")
 
         assert response.status == 200
         assert response.json() == cached_list
+
+        self._cache.get.assert_called_once_with("mock.list.page-None.size-None")
 
     @pytest.mark.asyncio
     async def test_should_get_without_id_pass_pagination_params_to_repo_when_receives_it_as_query_string(self):
@@ -107,12 +107,14 @@ class TestServer(BaseSanicTestCase):
     async def test_should_get_with_id_returns_200_and_cached_resource(self):
         cached_resource = {"name": "Jean Pinzon"}
 
-        await self._cache.set("mock.get.id-6", json.dumps(cached_resource))
+        self._cache.get.return_value = json.dumps(cached_resource)
 
         request, response = await self.request_api("/mock/6")
 
         assert response.status == 200
         assert response.json() == cached_resource
+
+        self._cache.get.assert_called_once_with("mock.get.id-6")
 
     @pytest.mark.asyncio
     async def test_should_get_with_id_returns_404_if_resource_not_found(self):
