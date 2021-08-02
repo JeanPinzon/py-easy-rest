@@ -22,8 +22,6 @@ setuptools.setup(
         ),
     ),
     install_requires=[
-        "aioredis==1.3.1",
-        "dnspython==2.1.0",
         "jsonschema==3.2.0",
         "motor==2.3.0",
         "sanic-openapi==0.6.2",

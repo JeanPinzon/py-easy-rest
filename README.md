@@ -1,7 +1,6 @@
 ![Lint](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-lint.yml/badge.svg)
 ![Build and Test](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-test.yml/badge.svg)
 ![Upload Package](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-publish.yml/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/JeanPinzon/py-easy-rest/badge.svg?branch=master)](https://coveralls.io/github/JeanPinzon/py-easy-rest?branch=master)
 [![PyPI version](https://badge.fury.io/py/py-easy-rest.svg)](https://badge.fury.io/py/py-easy-rest)
 
 # py-easy-rest
@@ -129,48 +128,19 @@ To create your own cache, you just need to implement our [Cache](https://github.
 pyrApp = App(config, cache=MyOwnCache())
 ```
 
+### Caches ready to use
 
-### Redis cache
+- [Redis](https://github.com/JeanPinzon/py-easy-rest-redis-cache)
+- [Memory](https://github.com/JeanPinzon/py-easy-rest-memory-cache)
 
-```python
-#main.py
-from py_easy_rest.server import App
-from py_easy_rest.caches.redis import RedisCache
-
-
-config = {
-    "name": "Project Name",
-    "schemas": [{
-        "name": "Mock",
-        "slug": "mock",
-        "properties": {
-            "name": {"type": "string"},
-            "age": {"type": "integer"},
-        },
-        "required": ["name"],
-    }]
-}
-
-cache = RedisCache("redis://localhost")
-
-pyrApp = App(config, cache=cache)
-
-pyrApp.app.run(
-    host='0.0.0.0',
-    port=8000,
-    debug=True,
-    auto_reload=True,
-)
-```
-
-### Middlewares and Listeners
+## Middlewares and Listeners
 
 An instance of a `py_easy_rest.server.App` has a property called `app` that is a Sanic app. You can use this property to add middlewares and listeners. 
 Take a look at the docs: [Middlewares](https://sanicframework.org/guide/basics/middleware.html#attaching-middleware), 
 Take a look at the docs: [Listeners](https://sanicframework.org/guide/basics/listeners.html)
 
 
-### API Description
+## API Description
 
 Properties you could pass to py_easy_rest.server.App:
 
