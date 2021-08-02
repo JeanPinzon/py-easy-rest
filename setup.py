@@ -23,7 +23,6 @@ setuptools.setup(
     ),
     install_requires=[
         "jsonschema==3.2.0",
-        "motor==2.3.0",
         "sanic-openapi==0.6.2",
         "sanic==20.9.1",
     ],

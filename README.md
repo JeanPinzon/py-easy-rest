@@ -1,7 +1,8 @@
-![Lint](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-lint.yml/badge.svg)
+0.![Lint](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-lint.yml/badge.svg)
 ![Build and Test](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-test.yml/badge.svg)
 ![Upload Package](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-publish.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/py-easy-rest.svg)](https://badge.fury.io/py/py-easy-rest)
+
 
 # py-easy-rest
 
@@ -10,6 +11,7 @@ It is based on Sanic and it has built in extensions to add repositories and cach
 
 
 ## Getting Started
+
 
 ### How to install
 
@@ -61,7 +63,6 @@ Now you can access `http://localhost:8000/swagger` to access your api documentat
 
 ## Integrating with Repositories
 
-
 It is possible to add a repository to your application persist data into some data base. 
 By default it will use a in memory repository, witch is not recommended to production environment.
 
@@ -72,48 +73,10 @@ To create your own repository, you just need to implement our [Repo](https://git
 pyrApp = App(config, repo=MyOwnRepo())
 ```
 
-### Mongo Repository
 
-```python
-#main.py
-from motor.motor_asyncio import AsyncIOMotorClient
+### Repos ready to use
 
-from py_easy_rest.server import App
-from py_easy_rest.repos.mongo import MongoRepo
-
-
-config = {
-    "name": "Project Name",
-    "schemas": [{
-        "name": "Mock",
-        "slug": "mock",
-        "properties": {
-            "name": {"type": "string"},
-            "age": {"type": "integer"},
-        },
-        "required": ["name"],
-    }]
-}
-
-repo = MongoRepo()
-
-pyrApp = App(config, repo=repo)
-
-@pyrApp.app.listener('before_server_start')
-def init(app, loop):
-    mongo_db_instance = AsyncIOMotorClient("mongodb://localhost:27017/db")
-    db = mongo_db_instance.get_default_database()
-    collection = db["default"]
-    repo.set_db_collection(collection)
-
-
-pyrApp.app.run(
-    host='0.0.0.0',
-    port=8000,
-    debug=True,
-    auto_reload=True,
-)
-```
+- [Mongo with Motor client](https://github.com/JeanPinzon/py-easy-rest-mongo-motor-client)
 
 
 ## Integrating with Cache Strategies
@@ -128,10 +91,12 @@ To create your own cache, you just need to implement our [Cache](https://github.
 pyrApp = App(config, cache=MyOwnCache())
 ```
 
+
 ### Caches ready to use
 
 - [Redis](https://github.com/JeanPinzon/py-easy-rest-redis-cache)
 - [Memory](https://github.com/JeanPinzon/py-easy-rest-memory-cache)
+
 
 ## Middlewares and Listeners
 
