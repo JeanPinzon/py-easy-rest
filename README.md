@@ -1,4 +1,4 @@
-0.![Lint](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-lint.yml/badge.svg)
+![Lint](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-lint.yml/badge.svg)
 ![Build and Test](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-test.yml/badge.svg)
 ![Upload Package](https://github.com/JeanPinzon/py-easy-rest/actions/workflows/python-publish.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/py-easy-rest.svg)](https://badge.fury.io/py/py-easy-rest)

@@ -22,6 +22,7 @@ setuptools.setup(
         ),
     ),
     install_requires=[
+        "bson==0.5.10",
         "jsonschema==3.2.0",
         "sanic-openapi==0.6.2",
         "sanic==20.9.1",
