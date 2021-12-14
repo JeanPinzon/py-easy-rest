@@ -12,6 +12,8 @@ from py_easy_rest.repos.memory import MemoryRepo
 from py_easy_rest.utils.dictionary import merge
 from py_easy_rest.utils.json import JSONEncoder
 from py_easy_rest.utils.request import get_query_string_arg
+from py_easy_rest.utils.sanic.cors import add_cors_headers
+from py_easy_rest.utils.sanic.options import setup_options
 
 
 json_dumps = JSONEncoder().encode
@@ -26,6 +28,7 @@ class App():
         cache=DummyCache(),
         cache_list_seconds_ttl=10,
         cache_get_seconds_ttl=60 * 30,  # thirty minutes
+        cors_enabled=True,
     ):
         self._repo = repo
         self._api_config = api_config
@@ -46,6 +49,13 @@ class App():
 
         for schema in self._schemas:
             self._define_routes(schema)
+
+        if cors_enabled:
+            # Add OPTIONS handlers to any route that is missing it
+            self.app.register_listener(setup_options, "before_server_start")
+
+            # Fill in CORS headers
+            self.app.register_middleware(add_cors_headers, "response")
 
     @staticmethod
     async def _handle_app_error(request, exception):
