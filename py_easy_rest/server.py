@@ -3,6 +3,7 @@ import json
 
 from jsonschema import Draft7Validator
 from sanic import Sanic, response
+from sanic_cors import CORS
 from sanic.log import logger
 from sanic_openapi import doc, swagger_blueprint
 
@@ -12,8 +13,6 @@ from py_easy_rest.repos.memory import MemoryRepo
 from py_easy_rest.utils.dictionary import merge
 from py_easy_rest.utils.json import JSONEncoder
 from py_easy_rest.utils.request import get_query_string_arg
-from py_easy_rest.utils.sanic.cors import add_cors_headers
-from py_easy_rest.utils.sanic.options import setup_options
 
 
 json_dumps = JSONEncoder().encode
@@ -51,11 +50,7 @@ class App():
             self._define_routes(schema)
 
         if cors_enabled:
-            # Add OPTIONS handlers to any route that is missing it
-            self.app.register_listener(setup_options, "before_server_start")
-
-            # Fill in CORS headers
-            self.app.register_middleware(add_cors_headers, "response")
+            CORS(self.app)
 
     @staticmethod
     async def _handle_app_error(request, exception):

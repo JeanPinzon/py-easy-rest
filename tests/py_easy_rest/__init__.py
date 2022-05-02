@@ -6,7 +6,7 @@ from py_easy_rest.caches.dummy import DummyCache
 
 
 api_config_mock = {
-    "name": "Project Name",
+    "name": "ProjectName",
     "schemas": [{
         "name": "Mock",
         "slug": "mock",

@@ -29,7 +29,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/mock/schema")
 
         assert response.status == 200
-        assert response.json() == expected_schema
+        assert response.json == expected_schema
 
     @pytest.mark.asyncio
     async def test_should_works_with_multiple_schemas_correctly(self):
@@ -43,7 +43,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/second/schema")
 
         assert response.status == 200
-        assert response.json() == expected_schema
+        assert response.json == expected_schema
 
     @pytest.mark.asyncio
     async def test_should_get_without_id_returns_200_and_a_list_of_resources(self):
@@ -57,7 +57,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/mock")
 
         assert response.status == 200
-        assert response.json() == expected_list_of_resources
+        assert response.json == expected_list_of_resources
 
         self._mock_repo.list.assert_called_once()
 
@@ -73,7 +73,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/mock")
 
         assert response.status == 200
-        assert response.json() == cached_list
+        assert response.json == cached_list
 
         self._cache.get.assert_called_once_with("mock.list.page-None.size-None")
 
@@ -88,7 +88,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api(f"/mock?page={expected_page}&size={expected_size}")
 
         assert response.status == 200
-        assert response.json() == expected_list_of_resources
+        assert response.json == expected_list_of_resources
 
         self._mock_repo.list.assert_called_once_with("mock", expected_page, expected_size)
 
@@ -101,7 +101,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/mock/1")
 
         assert response.status == 200
-        assert response.json() == expected_resource
+        assert response.json == expected_resource
 
     @pytest.mark.asyncio
     async def test_should_get_with_id_returns_200_and_cached_resource(self):
@@ -112,7 +112,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/mock/6")
 
         assert response.status == 200
-        assert response.json() == cached_resource
+        assert response.json == cached_resource
 
         self._cache.get.assert_called_once_with("mock.get.id-6")
 
@@ -140,7 +140,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 201
-        assert response.json() == {"id": expected_id}
+        assert response.json == {"id": expected_id}
 
         self._mock_repo.create.assert_called_once_with("mock", resource, None)
 
@@ -158,7 +158,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 400
-        assert response.json() == {"errors": ["'twenty eight' is not of type 'integer'"]}
+        assert response.json == {"errors": ["'twenty eight' is not of type 'integer'"]}
 
         self._mock_repo.create.assert_not_called()
 
@@ -176,7 +176,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 201
-        assert response.json() == {"id": resource_id}
+        assert response.json == {"id": resource_id}
 
         self._mock_repo.create.assert_called_once_with("mock", resource, resource_id)
 
@@ -192,7 +192,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 200
-        assert response.json() == {}
+        assert response.json == {}
 
         self._mock_repo.replace.assert_called_once_with("mock", resource_id, resource)
 
@@ -210,7 +210,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 404
-        assert response.json() == {}
+        assert response.json == {}
 
         self._mock_repo.replace.assert_not_called()
 
@@ -226,7 +226,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 400
-        assert response.json() == {"errors": ["'twenty eight' is not of type 'integer'"]}
+        assert response.json == {"errors": ["'twenty eight' is not of type 'integer'"]}
 
         self._mock_repo.create.assert_not_called()
 
@@ -244,7 +244,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 200
-        assert response.json() == {}
+        assert response.json == {}
 
         self._mock_repo.replace.assert_called_once_with("mock", resource_id, resource)
 
@@ -262,7 +262,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 404
-        assert response.json() == {}
+        assert response.json == {}
 
         self._mock_repo.replace.assert_not_called()
 
@@ -280,7 +280,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 400
-        assert response.json() == {"errors": ["'twenty eight' is not of type 'integer'"]}
+        assert response.json == {"errors": ["'twenty eight' is not of type 'integer'"]}
 
         self._mock_repo.create.assert_not_called()
 
@@ -294,7 +294,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 200
-        assert response.json() == {}
+        assert response.json == {}
 
         self._mock_repo.delete.assert_called_once_with("mock", resource_id)
 
@@ -312,7 +312,7 @@ class TestServer(BaseSanicTestCase):
         )
 
         assert response.status == 404
-        assert response.json() == {}
+        assert response.json == {}
 
         self._mock_repo.replace.assert_not_called()
 
@@ -346,7 +346,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api("/mock?page=123")
 
         assert response.status == 500
-        assert response.json() == {"message": expected_error_message}
+        assert response.json == {"message": expected_error_message}
 
         self._mock_repo.list.assert_called_once()
 
@@ -363,7 +363,7 @@ class TestServer(BaseSanicTestCase):
         request, response = await self.request_api(f"/mock/{resource_id}")
 
         assert response.status == 500
-        assert response.json() == {"message": expected_error_message}
+        assert response.json == {"message": expected_error_message}
 
         self._mock_repo.get.assert_called_once_with("mock", resource_id)
 
