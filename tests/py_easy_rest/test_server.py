@@ -368,7 +368,7 @@ class TestServer(BaseSanicTestCase):
         self._mock_repo.get.assert_called_once_with("mock", resource_id)
 
     @pytest.mark.asyncio
-    async def test_should_disabled_handlers_return_405(self):
+    async def test_should_disabled_handlers_return_404(self):
         request, response = await self.request_api("/second/1", method="DELETE")
 
-        assert response.status == 405
+        assert response.status == 404
