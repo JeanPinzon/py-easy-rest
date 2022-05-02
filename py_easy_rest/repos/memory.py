@@ -38,8 +38,11 @@ class MemoryRepo(Repo):
 
     async def create(self, slug, data, id=None):
         self._ensure_slug_exists(slug)
+
         if id is None:
-            id = ObjectId()
+            id = str(ObjectId())
+
+        data['id'] = id
 
         if id not in self._data_index[slug]:
             self._data_index[slug].append(id)
@@ -51,6 +54,7 @@ class MemoryRepo(Repo):
     async def replace(self, slug, id, data):
         self._ensure_slug_exists(slug)
         if id in self._data_index[slug]:
+            data['id'] = id
             self._data[slug][id] = data
 
     async def delete(self, slug, id):

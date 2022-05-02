@@ -25,6 +25,7 @@ setuptools.setup(
         "bson==0.5.10",
         "jsonschema==4.4.0",
         "sanic==22.3.1",
+        "sanic-ext==22.3.1",
         "sanic-openapi==21.12.0",
         "sanic-cors==2.0.1",
     ],
