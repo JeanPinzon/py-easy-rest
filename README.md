@@ -49,7 +49,6 @@ pyrApp.app.run(
     host='0.0.0.0',
     port=8000,
     debug=True,
-    auto_reload=True,
 )
 ```
 
@@ -58,7 +57,7 @@ pyrApp.app.run(
 
 `python main.py`
 
-Now you can access `http://localhost:8000/swagger` to access your api documentation.
+Now you can access `http://localhost:8000/docs` to access your api documentation.
 
 
 ## Integrating with Repositories
@@ -116,3 +115,4 @@ Properties you could pass to py_easy_rest.server.App:
 | cache                  | False    | DummyCache() | Cache strategy                           |
 | cache_list_seconds_ttl | False    | 10           | TTL to cache the list results in seconds |
 | cache_get_seconds_ttl  | False    | 60 * 30      | TTL to cache the get results             |
+| cors_origins           | False    | "*"          | CORS Domain origins                      |

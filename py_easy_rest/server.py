@@ -25,7 +25,7 @@ class App():
         cache=DummyCache(),
         cache_list_seconds_ttl=10,
         cache_get_seconds_ttl=60 * 30,  # thirty minutes
-        CORS_ORIGINS="*",
+        cors_origins="*",
     ):
         self._repo = repo
         self._api_config = api_config
@@ -42,7 +42,7 @@ class App():
         for schema in self._schemas:
             self._define_routes(schema)
 
-        self.app.config.CORS_ORIGINS = CORS_ORIGINS
+        self.app.config.CORS_ORIGINS = cors_origins
         self.app.config.OAS_UI_DEFAULT = "swagger"
 
         Extend(self.app)
