@@ -1,11 +1,9 @@
-
 import json
 
 from jsonschema import Draft7Validator
 from sanic import Sanic, response
-from sanic_cors import CORS
+from sanic_ext import Extend, openapi
 from sanic.log import logger
-from sanic_openapi import doc, swagger_blueprint
 
 from py_easy_rest import PYRApplicationError
 from py_easy_rest.caches.dummy import DummyCache
@@ -27,7 +25,7 @@ class App():
         cache=DummyCache(),
         cache_list_seconds_ttl=10,
         cache_get_seconds_ttl=60 * 30,  # thirty minutes
-        cors_enabled=True,
+        CORS_ORIGINS="*",
     ):
         self._repo = repo
         self._api_config = api_config
@@ -39,18 +37,15 @@ class App():
 
         self.app = Sanic(self._api_config["name"])
 
-        self.app.blueprint(swagger_blueprint)
-
-        self.app.config["API_TITLE"] = self._api_config["name"]
-        self.app.config["API_SCHEMES"] = ["https", "http"]
-
         self.app.error_handler.add(PYRApplicationError, App._handle_app_error)
 
         for schema in self._schemas:
             self._define_routes(schema)
 
-        if cors_enabled:
-            CORS(self.app)
+        self.app.config.CORS_ORIGINS = CORS_ORIGINS
+        self.app.config.OAS_UI_DEFAULT = "swagger"
+
+        Extend(self.app)
 
     @staticmethod
     async def _handle_app_error(request, exception):
@@ -83,24 +78,25 @@ class App():
         ])
 
         @self.app.get(f"/{slug}/schema")
-        @doc.summary("Get JSON Schema")
-        @doc.description("Route to get the api JSON Schema.")
-        @doc.response(200, None, description="Success to get JSON Schema.")
+        @openapi.tag(name)
+        @openapi.summary("Get JSON Schema")
+        @openapi.description("Route to get the api JSON Schema.")
+        @openapi.response(200, {"application/json": None}, "Success to get JSON Schema.")
         async def _get_schema(request):
             return response.json(schema, dumps=json_dumps)
 
         if "list" in enabled_handlers:
             @self.app.get(f"/{slug}")
-            @doc.summary(f"List {name}")
-            @doc.description(
-                f"Route to list all {name}. "
+            @openapi.tag(name)
+            @openapi.summary("List entities")
+            @openapi.description(
+                "Route to list entities. "
                 "You can use the parameters page and size. Default values: page=0, size=30."
             )
-            @doc.response(200, None, description=f"Success to list {name}.")
-            @doc.response(500, None, description="Internal server error.")
-            @doc.consumes(doc.Integer(name="page"), location="query")
-            @doc.consumes(doc.Integer(name="size"), location="query")
-            @doc.produces(doc.List(doc.Dictionary()))
+            @openapi.response(200, {"application/json": []}, "Success to list entities.")
+            @openapi.response(500, {"application/json": None}, "Internal server error.")
+            @openapi.parameter("page", int, "query")
+            @openapi.parameter("size", int, "query")
             async def _list(request):
                 page = get_query_string_arg(request.args, "page")
                 size = get_query_string_arg(request.args, "size")
@@ -131,15 +127,17 @@ class App():
         if "create" in enabled_handlers:
             @self.app.post(f"/{slug}")
             @self.app.post(f"/{slug}/<id>")
-            @doc.summary(f"Create a new {name}")
-            @doc.description(
-                f"Route to create a new document of {name}. "
+            @openapi.tag(name)
+            @openapi.summary("Create a new entity")
+            @openapi.description(
+                "Route to create a new entity. "
                 "Take a look at the schema route to know what properties you must send."
             )
-            @doc.response(201, None, description=f"Success to create a new {name} document.")
-            @doc.response(400, None, description="Validation error.")
-            @doc.response(500, None, description="Internal server error.")
-            @doc.consumes(doc.JsonBody({}), location="body")
+            @openapi.response(201, {"application/json": None}, "Success to create a new entity.")
+            @openapi.response(400, {"application/json": None}, "Validation error.")
+            @openapi.response(500, {"application/json": None}, "Internal server error.")
+            @openapi.parameter("id", required=False, allowEmptyValue=True, location="path")
+            @openapi.body({"application/json": {}})
             async def _post(request, id=None):
                 errors = self._validate(request.json, schema)
 
@@ -156,12 +154,13 @@ class App():
 
         if "get" in enabled_handlers:
             @self.app.get(f"/{slug}/<id>")
-            @doc.summary("Get a document by id")
-            @doc.description(f"Route to get a {name} document by id.")
-            @doc.response(200, None, description="Success to get the document.")
-            @doc.response(404, None, description="Document not found.")
-            @doc.response(500, None, description="Internal server error.")
-            @doc.produces(doc.Dictionary())
+            @openapi.tag(name)
+            @openapi.summary("Get a entity by id")
+            @openapi.description("Route to get a entity by id.")
+            @openapi.response(200, {"application/json": None}, "Success to get the entity.")
+            @openapi.response(404, {"application/json": None}, "entity not found.")
+            @openapi.response(500, {"application/json": None}, "Internal server error.")
+            @openapi.parameter("id", location="path")
             async def _get(request, id):
                 cache_key = f"{slug}.get.id-{id}"
 
@@ -184,15 +183,17 @@ class App():
 
         if "replace" in enabled_handlers:
             @self.app.put(f"/{slug}/<id>")
-            @doc.summary("Replace a document by id")
-            @doc.description(
-                f"Route to replace a document of {name}. "
+            @openapi.tag(name)
+            @openapi.summary("Replace a entity by id")
+            @openapi.description(
+                "Route to replace a entity. "
                 "Take a look at the schema route to know what properties you must send."
             )
-            @doc.response(200, None, description="Success to replace the document.")
-            @doc.response(400, None, description="Validation error.")
-            @doc.response(500, None, description="Internal server error.")
-            @doc.consumes(doc.JsonBody({}), location="body")
+            @openapi.response(200, {"application/json": None}, "Success to replace the entity.")
+            @openapi.response(400, {"application/json": None}, "Validation error.")
+            @openapi.response(500, {"application/json": None}, "Internal server error.")
+            @openapi.parameter("id", location="path")
+            @openapi.body({"application/json": {}})
             async def _put(request, id):
                 existent_doc = await self._repo.get(slug, id)
 
@@ -213,15 +214,17 @@ class App():
 
         if "partial_update" in enabled_handlers:
             @self.app.patch(f"/{slug}/<id>")
-            @doc.summary("Partial update a document by id")
-            @doc.description(
-                f"Route to partial update a document of {name}. "
+            @openapi.tag(name)
+            @openapi.summary("Partial update a entity by id")
+            @openapi.description(
+                "Route to partial update a entity. "
                 "Take a look at the schema route to know what properties you must send."
             )
-            @doc.response(200, None, description="Success to partial update the document.")
-            @doc.response(400, None, description="Validation error.")
-            @doc.response(500, None, description="Internal server error.")
-            @doc.consumes(doc.JsonBody({}), location="body")
+            @openapi.response(200, {"application/json": None}, "Success to partial update the entity.")
+            @openapi.response(400, {"application/json": None}, "Validation error.")
+            @openapi.response(500, {"application/json": None}, "Internal server error.")
+            @openapi.parameter("id", location="path")
+            @openapi.body({"application/json": {}})
             async def _patch(request, id):
                 existent_doc = await self._repo.get(slug, id)
 
@@ -245,10 +248,12 @@ class App():
 
         if "delete" in enabled_handlers:
             @self.app.delete(f"/{slug}/<id>")
-            @doc.summary("Delere a document by id")
-            @doc.description(f"Route to delete a document of {name}.")
-            @doc.response(200, None, description="Success to delete the document.")
-            @doc.response(500, None, description="Internal server error.")
+            @openapi.tag(name)
+            @openapi.summary("Delere a entity by id")
+            @openapi.description("Route to delete a entity.")
+            @openapi.response(200, {"application/json": None}, "Success to delete the entity.")
+            @openapi.response(500, {"application/json": None}, "Internal server error.")
+            @openapi.parameter("id", location="path")
             async def _delete(request, id):
                 existent_doc = await self._repo.get(slug, id)
 

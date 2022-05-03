@@ -36,7 +36,6 @@ class BaseSanicTestCase(AsyncTestCase):
             api_config_mock,
             repo=self._mock_repo,
             cache=self._cache,
-            cors_enabled=False,
         )
 
     async def request_api(self, path, method="GET", json=None):
