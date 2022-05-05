@@ -1,4 +1,4 @@
-from bson.objectid import ObjectId
+import uuid
 
 from py_easy_rest.repos import Repo
 
@@ -40,7 +40,7 @@ class MemoryRepo(Repo):
         self._ensure_slug_exists(slug)
 
         if id is None:
-            id = str(ObjectId())
+            id = str(uuid.uuid4())
 
         data['id'] = id
 

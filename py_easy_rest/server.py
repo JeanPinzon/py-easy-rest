@@ -9,11 +9,7 @@ from py_easy_rest import PYRApplicationError
 from py_easy_rest.caches.dummy import DummyCache
 from py_easy_rest.repos.memory import MemoryRepo
 from py_easy_rest.utils.dictionary import merge
-from py_easy_rest.utils.json import JSONEncoder
 from py_easy_rest.utils.request import get_query_string_arg
-
-
-json_dumps = JSONEncoder().encode
 
 
 class App():
@@ -50,7 +46,7 @@ class App():
     @staticmethod
     async def _handle_app_error(request, exception):
         logger.exception(f"Failed to handle request {exception}")
-        return response.json({"message": exception.user_message}, status=500, dumps=json_dumps)
+        return response.json({"message": exception.user_message}, status=500)
 
     def _validate(self, resource, schema):
         validator = Draft7Validator(schema)
@@ -83,7 +79,7 @@ class App():
         @openapi.description("Route to get the api JSON Schema.")
         @openapi.response(200, {"application/json": None}, "Success to get JSON Schema.")
         async def _get_schema(request):
-            return response.json(schema, dumps=json_dumps)
+            return response.json(schema)
 
         if "list" in enabled_handlers:
             @self.app.get(f"/{slug}")
@@ -114,15 +110,15 @@ class App():
                 if cached is not None:
                     logger.info(f"Found cache result with key {cache_key}")
                     result = json.loads(cached)
-                    return response.json(result, dumps=json_dumps)
+                    return response.json(result)
 
                 logger.info(f"Not found cache result with key {cache_key}")
 
                 result = await self._repo.list(slug, page, size)
 
-                await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_list_seconds_ttl)
+                await self._cache.set(cache_key, json.dumps(result), ttl=self._cache_list_seconds_ttl)
 
-                return response.json(result, dumps=json_dumps)
+                return response.json(result)
 
         if "create" in enabled_handlers:
             @self.app.post(f"/{slug}")
@@ -142,7 +138,7 @@ class App():
                 errors = self._validate(request.json, schema)
 
                 if errors:
-                    return response.json({"errors": errors}, status=400, dumps=json_dumps)
+                    return response.json({"errors": errors}, status=400)
 
                 resource_id = await self._repo.create(slug, request.json, id)
 
@@ -150,7 +146,7 @@ class App():
                     cache_key = f"{slug}.get.id-{id}"
                     await self._cache.delete(cache_key)
 
-                return response.json({"id": resource_id}, status=201, dumps=json_dumps)
+                return response.json({"id": resource_id}, status=201)
 
         if "get" in enabled_handlers:
             @self.app.get(f"/{slug}/<id>")
@@ -169,17 +165,17 @@ class App():
                 if cached is not None:
                     logger.info(f"Found cache result with key {cache_key}")
                     result = json.loads(cached)
-                    return response.json(result, dumps=json_dumps)
+                    return response.json(result)
 
                 logger.info(f"Not found cache result with key {cache_key}")
 
                 result = await self._repo.get(slug, id)
 
                 if result:
-                    await self._cache.set(cache_key, json_dumps(result), ttl=self._cache_get_seconds_ttl)
-                    return response.json(result, dumps=json_dumps)
+                    await self._cache.set(cache_key, json.dumps(result), ttl=self._cache_get_seconds_ttl)
+                    return response.json(result)
 
-                return response.json({}, status=404, dumps=json_dumps)
+                return response.json({}, status=404)
 
         if "replace" in enabled_handlers:
             @self.app.put(f"/{slug}/<id>")
@@ -198,19 +194,19 @@ class App():
                 existent_doc = await self._repo.get(slug, id)
 
                 if not existent_doc:
-                    return response.json({}, status=404, dumps=json_dumps)
+                    return response.json({}, status=404)
 
                 errors = self._validate(request.json, schema)
 
                 if errors:
-                    return response.json({"errors": errors}, status=400, dumps=json_dumps)
+                    return response.json({"errors": errors}, status=400)
 
                 await self._repo.replace(slug, id, request.json)
 
                 cache_key = f"{slug}.get.id-{id}"
                 await self._cache.delete(cache_key)
 
-                return response.json({}, dumps=json_dumps)
+                return response.json({})
 
         if "partial_update" in enabled_handlers:
             @self.app.patch(f"/{slug}/<id>")
@@ -229,7 +225,7 @@ class App():
                 existent_doc = await self._repo.get(slug, id)
 
                 if not existent_doc:
-                    return response.json({}, status=404, dumps=json_dumps)
+                    return response.json({}, status=404)
 
                 doc = merge(request.json, existent_doc)
                 doc.pop("_id", None)
@@ -237,14 +233,14 @@ class App():
                 errors = self._validate(doc, schema)
 
                 if errors:
-                    return response.json({"errors": errors}, status=400, dumps=json_dumps)
+                    return response.json({"errors": errors}, status=400)
 
                 await self._repo.replace(slug, id, doc)
 
                 cache_key = f"{slug}.get.id-{id}"
                 await self._cache.delete(cache_key)
 
-                return response.json({}, dumps=json_dumps)
+                return response.json({})
 
         if "delete" in enabled_handlers:
             @self.app.delete(f"/{slug}/<id>")
@@ -258,11 +254,11 @@ class App():
                 existent_doc = await self._repo.get(slug, id)
 
                 if not existent_doc:
-                    return response.json({}, status=404, dumps=json_dumps)
+                    return response.json({}, status=404)
 
                 await self._repo.delete(slug, id)
 
                 cache_key = f"{slug}.get.id-{id}"
                 await self._cache.delete(cache_key)
 
-                return response.json({}, dumps=json_dumps)
+                return response.json({})
