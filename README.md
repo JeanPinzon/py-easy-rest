@@ -75,7 +75,7 @@ pyrApp = App(config, repo=MyOwnRepo())
 
 ### Repos ready to use
 
-- [Mongo with Motor client](https://github.com/JeanPinzon/py-easy-rest-mongo-motor-client)
+- [Mongo with Motor client](https://github.com/JeanPinzon/py-easy-rest-mongo-motor-repo)
 
 
 ## Integrating with Cache Strategies
