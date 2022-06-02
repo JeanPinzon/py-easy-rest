@@ -7,7 +7,7 @@
 # py-easy-rest
 
 It is a lib to create fast and scalable rest apis based on JSON schema in a very simple way. 
-It is based on Sanic and it has built in extensions to add repositories and caches.
+It is based on [Sanic](https://sanic.dev) and it has built in extensions to add repositories and caches.
 
 
 ## Getting Started
@@ -24,10 +24,13 @@ It is based on Sanic and it has built in extensions to add repositories and cach
 > The next sections of this documentation will show you ways to integrate your application with Mongo DB and ways to use cache strategies.
 > You can also create your own repositories and cache strategies to integrate your app with other technologies.
 
+> `PYRSanicAppBuilder.build` returns a [Sanic App](https://sanic.readthedocs.io/en/stable/sanic/api/app.html), so you can use it to extend and build new things in your app.
+
 ```python
 #main.py
 
-from py_easy_rest.server import App
+from py_easy_rest import PYRSanicAppBuilder
+from py_easy_rest.service import PYRService
 
 
 config = {
@@ -43,9 +46,10 @@ config = {
     }]
 }
 
-pyrApp = App(config)
+service = PYRService(api_config_mock)
+sanic_app = PYRSanicAppBuilder.build(api_config_mock, service)
 
-pyrApp.app.run(
+sanic_app.run(
     host='0.0.0.0',
     port=8000,
     debug=True,
@@ -65,11 +69,11 @@ Now you can access `http://localhost:8000/docs` to access your api documentation
 It is possible to add a repository to your application persist data into some data base. 
 By default it will use a in memory repository, witch is not recommended to production environment.
 
-To create your own repository, you just need to implement our [Repo](https://github.com/JeanPinzon/py-easy-rest/blob/master/py_easy_rest/repos/__init__.py#L16) and pass it to the App: 
+To create your own repository, you just need to follow the [Repo](https://github.com/JeanPinzon/py-easy-rest/blob/master/py_easy_rest/repos.py) signature and pass it to the App:
 
 
 ```python
-pyrApp = App(config, repo=MyOwnRepo())
+service = PYRService(api_config_mock, repo=MyOwnRepo())
 ```
 
 
@@ -83,11 +87,11 @@ pyrApp = App(config, repo=MyOwnRepo())
 It is possible to add a cache to your application. 
 By default it will not use a cache, but you can choice a built in option or create your own cache.
 
-To create your own cache, you just need to implement our [Cache](https://github.com/JeanPinzon/py-easy-rest/blob/master/py_easy_rest/caches/__init__.py#L16) and pass it to the App: 
+To create your own cache, you just need to follow the [Cache](https://github.com/JeanPinzon/py-easy-rest/blob/master/py_easy_rest/caches.py) signature and pass it to the App:
 
 
 ```python
-pyrApp = App(config, cache=MyOwnCache())
+service = PYRService(api_config_mock, cache=MyOwnCache())
 ```
 
 
@@ -97,22 +101,22 @@ pyrApp = App(config, cache=MyOwnCache())
 - [Memory](https://github.com/JeanPinzon/py-easy-rest-memory-cache)
 
 
-## Middlewares and Listeners
-
-An instance of a `py_easy_rest.server.App` has a property called `app` that is a Sanic app. You can use this property to add middlewares and listeners. 
-Take a look at the docs: [Middlewares](https://sanicframework.org/guide/basics/middleware.html#attaching-middleware), 
-Take a look at the docs: [Listeners](https://sanicframework.org/guide/basics/listeners.html)
-
-
 ## API Description
 
-Properties you could pass to py_easy_rest.server.App:
+#### py_easy_rest.PYRSanicAppBuilder.build()
 
 | Properties             | Required | Default      | Description                              |
 |------------------------|----------|--------------|------------------------------------------|
 | api_config             | True     | None         | Object with project and schemas config   |
+| service                | True     | PYRService() | Service use to handle the operations     |
+
+
+#### py_easy_rest.services.PYRService()
+
+| Properties             | Required | Default         | Description                              |
+|------------------------|----------|-----------------|------------------------------------------|
+| api_config             | True     | None            | Object with project and schemas config   |
 | repo                   | False    | PYRMemoryRepo() | Repository used as data resource         |
 | cache                  | False    | PYRDummyCache() | Cache strategy                           |
-| cache_list_seconds_ttl | False    | 10           | TTL to cache the list results in seconds |
-| cache_get_seconds_ttl  | False    | 60 * 30      | TTL to cache the get results             |
-| cors_origins           | False    | "*"          | CORS Domain origins                      |
+| cache_list_seconds_ttl | False    | 10              | TTL to cache the list results in seconds |
+| cache_get_seconds_ttl  | False    | 60 * 30         | TTL to cache the get results             |
