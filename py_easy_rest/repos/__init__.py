@@ -2,16 +2,6 @@
 Module with repositories to be used connected with api.
 """
 
-from py_easy_rest import PYRApplicationError
-
-
-class DatabaseError(PYRApplicationError):
-    """
-    Error to raise in case of database errors.
-    """
-
-    pass
-
 
 class Repo():
     """

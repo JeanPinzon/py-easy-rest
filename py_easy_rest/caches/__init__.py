@@ -2,16 +2,6 @@
 Module with cache providers to be used connected with api.
 """
 
-from py_easy_rest import PYRApplicationError
-
-
-class CacheError(PYRApplicationError):
-    """
-    Error to raise in case of database errors.
-    """
-
-    pass
-
 
 class Cache():
     """
@@ -35,7 +25,7 @@ class Cache():
     async def set(self, key, value, ttl=None):
         """
         Receives <key> and <value> and set it into cache.
-        If it receives a <ttl>, the value is setted with it.
+        If it receives a <ttl>, the value is set with it.
         <ttl> is the time to the cache expires in seconds.
         """
         raise NotImplementedError

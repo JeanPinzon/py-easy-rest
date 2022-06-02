@@ -1,15 +1,9 @@
-import json
-
-from jsonschema import Draft7Validator
 from sanic import Sanic, response
 from sanic_ext import Extend, openapi
-from sanic.log import logger
+from sanic.exceptions import SanicException
+from sanic.handlers import ErrorHandler
 
-from py_easy_rest import PYRApplicationError
-from py_easy_rest.caches.dummy import DummyCache
-from py_easy_rest.repos.memory import MemoryRepo
-from py_easy_rest.utils.dictionary import merge
-from py_easy_rest.utils.request import get_query_string_arg
+from py_easy_rest import PYRInputNotValidError, PYRNotFoundError
 
 
 class App():
@@ -17,23 +11,15 @@ class App():
     def __init__(
         self,
         api_config,
-        repo=MemoryRepo(),
-        cache=DummyCache(),
-        cache_list_seconds_ttl=10,
-        cache_get_seconds_ttl=60 * 30,  # thirty minutes
+        service,
         cors_origins="*",
     ):
-        self._repo = repo
         self._api_config = api_config
-        self._cache = cache
-        self._cache_list_seconds_ttl = cache_list_seconds_ttl
-        self._cache_get_seconds_ttl = cache_get_seconds_ttl
+        self._service = service
 
         self._schemas = self._api_config["schemas"]
 
         self.app = Sanic(self._api_config["name"])
-
-        self.app.error_handler.add(PYRApplicationError, App._handle_app_error)
 
         for schema in self._schemas:
             self._define_routes(schema)
@@ -41,25 +27,9 @@ class App():
         self.app.config.CORS_ORIGINS = cors_origins
         self.app.config.OAS_UI_DEFAULT = "swagger"
 
+        self.app.error_handler = CustomErrorHandler()
+
         Extend(self.app)
-
-    @staticmethod
-    async def _handle_app_error(request, exception):
-        logger.exception(f"Failed to handle request {exception}")
-        return response.json({"message": exception.user_message}, status=500)
-
-    def _validate(self, resource, schema):
-        validator = Draft7Validator(schema)
-
-        errors = []
-
-        for error in validator.iter_errors(resource):
-            errors.append(error.message)
-
-        if len(errors) > 0:
-            return errors
-
-        return None
 
     def _define_routes(self, schema):
         slug = schema['slug']
@@ -94,29 +64,10 @@ class App():
             @openapi.parameter("page", int, "query")
             @openapi.parameter("size", int, "query")
             async def _list(request):
-                page = get_query_string_arg(request.args, "page")
-                size = get_query_string_arg(request.args, "size")
+                page = App._get_query_string_arg(request.args, "page")
+                size = App._get_query_string_arg(request.args, "size")
 
-                if page is not None:
-                    page = int(page)
-
-                if size is not None:
-                    size = int(size)
-
-                cache_key = f"{slug}.list.page-{page}.size-{size}"
-
-                cached = await self._cache.get(cache_key)
-
-                if cached is not None:
-                    logger.info(f"Found cache result with key {cache_key}")
-                    result = json.loads(cached)
-                    return response.json(result)
-
-                logger.info(f"Not found cache result with key {cache_key}")
-
-                result = await self._repo.list(slug, page, size)
-
-                await self._cache.set(cache_key, json.dumps(result), ttl=self._cache_list_seconds_ttl)
+                result = await self._service.list(slug, page, size)
 
                 return response.json(result)
 
@@ -135,17 +86,7 @@ class App():
             @openapi.parameter("id", required=False, allowEmptyValue=True, location="path")
             @openapi.body({"application/json": {}})
             async def _post(request, id=None):
-                errors = self._validate(request.json, schema)
-
-                if errors:
-                    return response.json({"errors": errors}, status=400)
-
-                resource_id = await self._repo.create(slug, request.json, id)
-
-                if id:
-                    cache_key = f"{slug}.get.id-{id}"
-                    await self._cache.delete(cache_key)
-
+                resource_id = await self._service.create(slug, request.json, id)
                 return response.json({"id": resource_id}, status=201)
 
         if "get" in enabled_handlers:
@@ -154,28 +95,12 @@ class App():
             @openapi.summary("Get a entity by id")
             @openapi.description("Route to get a entity by id.")
             @openapi.response(200, {"application/json": None}, "Success to get the entity.")
-            @openapi.response(404, {"application/json": None}, "entity not found.")
+            @openapi.response(404, {"application/json": None}, "Entity not found.")
             @openapi.response(500, {"application/json": None}, "Internal server error.")
             @openapi.parameter("id", location="path")
             async def _get(request, id):
-                cache_key = f"{slug}.get.id-{id}"
-
-                cached = await self._cache.get(cache_key)
-
-                if cached is not None:
-                    logger.info(f"Found cache result with key {cache_key}")
-                    result = json.loads(cached)
-                    return response.json(result)
-
-                logger.info(f"Not found cache result with key {cache_key}")
-
-                result = await self._repo.get(slug, id)
-
-                if result:
-                    await self._cache.set(cache_key, json.dumps(result), ttl=self._cache_get_seconds_ttl)
-                    return response.json(result)
-
-                return response.json({}, status=404)
+                result = await self._service.get(slug, id)
+                return response.json(result)
 
         if "replace" in enabled_handlers:
             @self.app.put(f"/{slug}/<id>")
@@ -191,21 +116,7 @@ class App():
             @openapi.parameter("id", location="path")
             @openapi.body({"application/json": {}})
             async def _put(request, id):
-                existent_doc = await self._repo.get(slug, id)
-
-                if not existent_doc:
-                    return response.json({}, status=404)
-
-                errors = self._validate(request.json, schema)
-
-                if errors:
-                    return response.json({"errors": errors}, status=400)
-
-                await self._repo.replace(slug, id, request.json)
-
-                cache_key = f"{slug}.get.id-{id}"
-                await self._cache.delete(cache_key)
-
+                await self._service.replace(slug, request.json, id)
                 return response.json({})
 
         if "partial_update" in enabled_handlers:
@@ -222,43 +133,46 @@ class App():
             @openapi.parameter("id", location="path")
             @openapi.body({"application/json": {}})
             async def _patch(request, id):
-                existent_doc = await self._repo.get(slug, id)
-
-                if not existent_doc:
-                    return response.json({}, status=404)
-
-                doc = merge(request.json, existent_doc)
-                doc.pop("_id", None)
-
-                errors = self._validate(doc, schema)
-
-                if errors:
-                    return response.json({"errors": errors}, status=400)
-
-                await self._repo.replace(slug, id, doc)
-
-                cache_key = f"{slug}.get.id-{id}"
-                await self._cache.delete(cache_key)
-
+                await self._service.partial_update(slug, request.json, id)
                 return response.json({})
 
         if "delete" in enabled_handlers:
             @self.app.delete(f"/{slug}/<id>")
             @openapi.tag(name)
-            @openapi.summary("Delere a entity by id")
+            @openapi.summary("Delete a entity by id")
             @openapi.description("Route to delete a entity.")
             @openapi.response(200, {"application/json": None}, "Success to delete the entity.")
             @openapi.response(500, {"application/json": None}, "Internal server error.")
             @openapi.parameter("id", location="path")
             async def _delete(request, id):
-                existent_doc = await self._repo.get(slug, id)
-
-                if not existent_doc:
-                    return response.json({}, status=404)
-
-                await self._repo.delete(slug, id)
-
-                cache_key = f"{slug}.get.id-{id}"
-                await self._cache.delete(cache_key)
-
+                await self._service.delete(slug, id)
                 return response.json({})
+
+    @staticmethod
+    def _get_query_string_arg(query_string, arg_name):
+        arg = query_string.get(arg_name, [])
+
+        if type(arg) is not list:
+            return arg
+
+        if len(arg) == 1:
+            return arg[0]
+
+        if len(arg) > 1:
+            return arg
+
+
+class CustomErrorHandler(ErrorHandler):
+
+    def default(self, request, exception):
+
+        if isinstance(exception, PYRInputNotValidError):
+            return response.json({"message": exception.message}, status=400)
+
+        if isinstance(exception, PYRNotFoundError):
+            return response.json({"message": exception.message}, status=404)
+
+        if not isinstance(exception, SanicException):
+            return response.json({"message": "Internal Server Error"}, status=500)
+
+        return super().default(request, exception)

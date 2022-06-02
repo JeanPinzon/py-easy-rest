@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 from aiounittest import AsyncTestCase
 from py_easy_rest.server import App
+from py_easy_rest.services.service import PyEasyRestService
 from py_easy_rest.repos.memory import MemoryRepo
 from py_easy_rest.caches.dummy import DummyCache
 
@@ -32,11 +33,13 @@ class BaseSanicTestCase(AsyncTestCase):
 
         self._cache.get.return_value = None
 
-        self._py_easy_rest = App(
+        self._service = PyEasyRestService(
             api_config_mock,
             repo=self._mock_repo,
             cache=self._cache,
         )
+
+        self._py_easy_rest = App(api_config_mock, self._service)
 
     async def request_api(self, path, method="GET", json=None):
         client = self._py_easy_rest.app.asgi_client
