@@ -111,8 +111,8 @@ Properties you could pass to py_easy_rest.server.App:
 | Properties             | Required | Default      | Description                              |
 |------------------------|----------|--------------|------------------------------------------|
 | api_config             | True     | None         | Object with project and schemas config   |
-| repo                   | False    | MemoryRepo() | Repository used as data resource         |
-| cache                  | False    | DummyCache() | Cache strategy                           |
+| repo                   | False    | PYRMemoryRepo() | Repository used as data resource         |
+| cache                  | False    | PYRDummyCache() | Cache strategy                           |
 | cache_list_seconds_ttl | False    | 10           | TTL to cache the list results in seconds |
 | cache_get_seconds_ttl  | False    | 60 * 30      | TTL to cache the get results             |
 | cors_origins           | False    | "*"          | CORS Domain origins                      |

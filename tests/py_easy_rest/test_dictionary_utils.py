@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from py_easy_rest.utils.dictionary import merge
+from py_easy_rest.dictionary_utils import merge
 
 
 class TestDictionaryUtils(TestCase):

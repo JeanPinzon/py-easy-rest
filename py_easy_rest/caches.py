@@ -29,3 +29,15 @@ class Cache():
         <ttl> is the time to the cache expires in seconds.
         """
         raise NotImplementedError
+
+
+class PYRDummyCache(Cache):
+
+    async def get(self, key):
+        return None
+
+    async def delete(self, key):
+        return None
+
+    async def set(self, key, value, ttl=None):
+        return None

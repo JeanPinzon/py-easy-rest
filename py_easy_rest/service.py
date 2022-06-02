@@ -1,21 +1,21 @@
 import json
 import logging
 
-from py_easy_rest import PYRInputNotValidError, PYRNotFoundError
-from py_easy_rest.caches.dummy import DummyCache
-from py_easy_rest.repos.memory import MemoryRepo
-from py_easy_rest.utils.dictionary import merge
+from py_easy_rest.exceptions import PYRInputNotValidError, PYRNotFoundError
+from py_easy_rest.caches import PYRDummyCache
+from py_easy_rest.repos import PYRMemoryRepo
+from py_easy_rest.dictionary_utils import merge
 
 from jsonschema import Draft7Validator
 
 
-class PyEasyRestService():
+class PYRService():
 
     def __init__(
         self,
         api_config,
-        repo=MemoryRepo(),
-        cache=DummyCache(),
+        repo=PYRMemoryRepo(),
+        cache=PYRDummyCache(),
         cache_list_seconds_ttl=10,
         cache_get_seconds_ttl=60 * 30,  # thirty minutes
     ):
