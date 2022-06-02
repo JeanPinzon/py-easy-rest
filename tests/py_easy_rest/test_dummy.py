@@ -2,13 +2,13 @@ import pytest
 
 from aiounittest import AsyncTestCase
 
-from py_easy_rest.caches.dummy import DummyCache
+from py_easy_rest.caches import PYRDummyCache
 
 
-class TestDummyCache(AsyncTestCase):
+class TestPYRDummyCache(AsyncTestCase):
 
     def setUp(self):
-        self._cache = DummyCache()
+        self._cache = PYRDummyCache()
 
     @pytest.mark.asyncio
     async def test_should_get_return_None(self):

@@ -2,14 +2,14 @@ import pytest
 
 from aiounittest import AsyncTestCase
 
-from py_easy_rest.repos.memory import MemoryRepo
+from py_easy_rest.repos import PYRMemoryRepo
 
 
-class TestMemoryRepo(AsyncTestCase):
+class TestPYRMemoryRepo(AsyncTestCase):
 
     @pytest.mark.asyncio
     async def test_should_get_return_correct_document(self):
-        repo = MemoryRepo(initial_data={
+        repo = PYRMemoryRepo(initial_data={
             "mock": {
                 "id-1": {"name": "Alycio", "id": "id-1"},
                 "id-2": {"name": "Jean", "id": "id-2"},
@@ -22,7 +22,7 @@ class TestMemoryRepo(AsyncTestCase):
 
     @pytest.mark.asyncio
     async def test_should_list_return_correct_list_of_documents(self):
-        repo = MemoryRepo(initial_data={
+        repo = PYRMemoryRepo(initial_data={
             "mock": {
                 "id-1": {"name": "Alycio", "id": "id-1"},
                 "id-2": {"name": "Jean", "id": "id-2"},
@@ -40,7 +40,7 @@ class TestMemoryRepo(AsyncTestCase):
 
     @pytest.mark.asyncio
     async def test_should_list_paginate_correctly(self):
-        repo = MemoryRepo(initial_data={
+        repo = PYRMemoryRepo(initial_data={
             "mock": {
                 "id-1": {"name": "Jean", "id": "id-1"},
                 "id-2": {"name": "Alycio", "id": "id-2"},
@@ -81,7 +81,7 @@ class TestMemoryRepo(AsyncTestCase):
 
     @pytest.mark.asyncio
     async def test_should_create_with_id_from_param_correctly(self):
-        repo = MemoryRepo(initial_data={
+        repo = PYRMemoryRepo(initial_data={
             "mock": {
                 "id-1": {"name": "Alycio", "id": "id-1"},
                 "id-2": {"name": "Jean", "id": "id-2"},
@@ -98,7 +98,7 @@ class TestMemoryRepo(AsyncTestCase):
 
     @pytest.mark.asyncio
     async def test_should_replace_document_correctly(self):
-        repo = MemoryRepo(initial_data={
+        repo = PYRMemoryRepo(initial_data={
             "mock": {
                 "id-1": {"name": "Jean", "id": "id-1"},
                 "id-2": {"name": "Alycio", "id": "id-2"},
@@ -117,7 +117,7 @@ class TestMemoryRepo(AsyncTestCase):
 
     @pytest.mark.asyncio
     async def test_should_delete_document_correctly(self):
-        repo = MemoryRepo(initial_data={
+        repo = PYRMemoryRepo(initial_data={
             "mock": {
                 "id-1": {"name": "Alycio", "id": "id-1"},
                 "id-2": {"name": "Jean", "id": "id-2"},
