@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="py-easy-rest",
-    version="0.4.2",
+    version="0.4.4",
     author="Jean Pinzon",
     author_email="jean.pinzon1@gmail.com",
     description="The simplest way to have a rest api",
