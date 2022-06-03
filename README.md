@@ -34,7 +34,7 @@ from py_easy_rest.service import PYRService
 
 
 config = {
-    "name": "Project Name",
+    "name": "ProjectName",
     "schemas": [{
         "name": "Mock",
         "slug": "mock",
