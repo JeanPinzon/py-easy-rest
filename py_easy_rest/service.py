@@ -110,7 +110,7 @@ class PYRService():
         doc = merge(data, existent_doc)
         doc.pop("_id", None)
 
-        errors = self._validate(data, slug)
+        errors = self._validate(doc, slug)
 
         if errors:
             raise PYRInputNotValidError(errors)
