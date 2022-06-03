@@ -46,8 +46,8 @@ config = {
     }]
 }
 
-service = PYRService(api_config_mock)
-sanic_app = PYRSanicAppBuilder.build(api_config_mock, service)
+service = PYRService(config)
+sanic_app = PYRSanicAppBuilder.build(config, service)
 
 sanic_app.run(
     host='0.0.0.0',
