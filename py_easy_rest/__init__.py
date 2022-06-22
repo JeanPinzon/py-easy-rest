@@ -1,5 +1,5 @@
 from sanic import Sanic, response
-from sanic_ext import Extend, openapi
+from sanic_ext import openapi
 from sanic.exceptions import SanicException
 from sanic.handlers import ErrorHandler
 from sanic.log import logger
