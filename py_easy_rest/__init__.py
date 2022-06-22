@@ -25,6 +25,14 @@ class PYRSanicAppBuilder():
 
         app.error_handler = CustomErrorHandler()
 
+        @app.get("/schemas")
+        @openapi.tag("schemas")
+        @openapi.summary("Get JSON Schemas")
+        @openapi.description("Route to get the api JSON Schemas.")
+        @openapi.response(200, {"application/json": None}, "Success to get JSON Schemas.")
+        async def _get_schema(request):
+            return response.json(schemas)
+
         return app
 
     @staticmethod
