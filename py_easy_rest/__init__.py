@@ -25,8 +25,6 @@ class PYRSanicAppBuilder():
 
         app.error_handler = CustomErrorHandler()
 
-        Extend(app)
-
         return app
 
     @staticmethod
