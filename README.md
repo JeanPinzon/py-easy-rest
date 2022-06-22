@@ -28,7 +28,7 @@ It is based on [Sanic](https://sanic.dev) and it has built in extensions to add 
 
 ```python
 #main.py
-
+from sanic_ext import Extend
 from py_easy_rest import PYRSanicAppBuilder
 from py_easy_rest.service import PYRService
 
@@ -48,6 +48,8 @@ config = {
 
 service = PYRService(config)
 sanic_app = PYRSanicAppBuilder.build(config, service)
+
+Extend(sanic_app)
 
 sanic_app.run(
     host='0.0.0.0',
